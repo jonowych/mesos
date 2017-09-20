@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 echo
@@ -7,12 +6,16 @@ if [ "${USER}" = "root" ] ; then
    exit 0 ; fi
 duser="${USER}" 
 
-
 echo && read -p "Install Mesosphere master node package (y)es?  " answer
 
-CODENAME=$(lsb_release -cs)
+# Add GPG key for the official mesosphere repository
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv E56151BF
 
-# Add Mesosphere repository
+# Add mesosphere repository to APT sources
+DISTRO=$(lsb_release -is | tr '[:upper:]' '[:lower:]')
+
+# Add repository according linux distro
+CODENAME=$(lsb_release -cs)
 echo "deb http://repos.mesosphere.com/${DISTRO} ${CODENAME} main" | sudo tee /etc/apt/sources.list.d/mesosphere.list
 sudo apt-get -y update
 
