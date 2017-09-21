@@ -1,19 +1,19 @@
 #!/bin/bash
 
 if [ ! "${USER}" = "root" ] ; then
-   echo -e "!! Enter $(tput setaf 1)sudo $0$(tput sgr0) to update !!"
-   echo && exit 0 ; fi
+   echo "!! Enter $(tput setaf 1)sudo $0$(tput sgr0) to update !!"
+   echo && exit ; fi
 
 echo
 read -p "How many nodes in Mesosphere cluster: " size
 read -p "Enter first node number in cluster: " new
 
 if ! [ $new -eq $new ] 2>/dev/null ; then
-        echo -e "$(tput setaf 1)!! Exit -- Sorry, integer only !!$(tput sgr0)"
-        exit 1; fi
+        echo "$(tput setaf 1)!! Exit -- Sorry, integer only !!$(tput sgr0)"
+        exit ; fi
 if [ -z $new ] || [ $new -lt 1 ] || [ $new -gt 254 ] ; then
-        echo -e "$(tput setaf 1)!! Exit -- node number out of range !!$(tput sgr0)"
-        exit 1; fi
+        echo "$(tput setaf 1)!! Exit -- node number out of range !!$(tput sgr0)"
+        exit ; fi
 
 new=$(echo $new | sed 's/^0*//')
 intf=$(ifconfig | grep -m1 ^e | awk '{print $1 }')
