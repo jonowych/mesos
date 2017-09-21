@@ -4,10 +4,9 @@ if [ ! "${USER}" = "root" ] ; then
    echo "!! Enter command as $(tput setaf 1)sudo $0 <arg> !!"
    echo $(tput sgr0) && exit ; fi
 
-if [[ $1 = "master" || $1 = "slave" ]]
-   then echo "$(tput setaf 6)Configuring Mesosphere $1 ...."
-   else echo "!!$(tput setaf 1) Specify master or slave !!"
-        echo $(tput sgr0) && exit ; fi
+if [[ $1 != "master" && $1 != "slave" ]] ; then
+   echo "!!$(tput setaf 1) Specify master or slave !!"
+   echo $(tput sgr0) && exit ; fi
 
 if [ -z $(which mesos) ] ; then
    echo "!!$(tput setaf 1) mesos is not installed !!"
