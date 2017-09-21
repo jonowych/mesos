@@ -22,7 +22,7 @@ if ! [ $new -eq $new ] 2>/dev/null ; then
         echo -e "$(tput setaf 1)!! Exit -- Sorry, integer only !!$(tput sgr0)"
         exit 1; fi
 if [ -z $new ] || [ $new -lt 1 ] || [ $new -gt 254 ] ; then
-        echo -e "$(tput setaf 1)!! Exit -- node number out of range !!$(tput sgr0)"
+        echo "$(tput setaf 1)!! Exit -- node number out of range !!$(tput sgr0)"
         exit 1; fi
 
 new=$(echo $new | sed 's/^0*//')
