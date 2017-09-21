@@ -24,7 +24,7 @@ do
    echo -n "$newip:2181," >> zk-temp
    echo "server.$k=zookeeper$k:2888:3888" >> zoo-temp
 done
-   i=`expr $new + $size - 1`
+   k=`expr $new + $size - 1`
    newip=$(echo $oldip | cut -d. -f4 --complement).$k
    echo "$newip:2181/mesos" >> zk-temp
    echo "server.$k=zookeeper$k:2888:3888" >> zoo-temp
@@ -32,7 +32,7 @@ done
 # "sudo cat" does not work. Need tp shell (-s) sudo and quote command. 
 `cat zk-temp > /etc/mesos/zk` | sudo -s
 
-k=$(awk '/.2888.3888/{print NR;exit}' /etc/zookeeper/conf/zoo.cfg)
+k=`expr $(awk '/.2888.3888/{print NR;exit}' /etc/zookeeper/conf/zoo.cfg) - 1`
 sudo sed -i '/.2888.3888/d' /etc/zookeeper/conf/zoo.cfg
 sudo sed -i "$k r zoo-temp" /etc/zookeeper/conf/zoo.cfg
 
