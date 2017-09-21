@@ -55,7 +55,6 @@ if [ $1 = "slave" ] ; then
    service mesos-master stop
    echo manual > /etc/init/mesos-master.override
 
-   service mesos-master stop
    echo $newip > /etc/mesos-slave/ip
    echo $newip > /etc/mesos-slave/hostname
 fi
