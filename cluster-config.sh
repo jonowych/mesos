@@ -63,5 +63,6 @@ rm zoo-temp
 # set up quorum for over 50 percent of the master members in cluster
 let "size = size/2 +size%2"
 echo $size > /etc/mesos-master/quorum
-echo "$(tput setaf 6)!! Cluster configuration has finished. !!$(tput sgr0)"
+echo "$(tput setaf 6)!! /etc/zookeeper/conf/zoo.cfg has been updated !!"
+echo "!! Cluster configuration has finished. !!$(tput sgr0)"
 echo
