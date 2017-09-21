@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [[ ! $1 = "master" && ! $1 = "slave" ]]
+if [[ $1 != "master" && $1 != "slave" ]]
    then echo "!! $(tput setaf 1)Specify master or slave !!"
         echo $(tput sgr0) && exit ; fi
 
