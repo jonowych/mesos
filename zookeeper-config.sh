@@ -17,18 +17,23 @@ oldip=$(ifconfig | grep $intf -A 1 | grep inet | awk '{ print $2 }' | awk -F: '{
 
 size=3
 echo -n "zk://"  > zk-temp
-echo -e "\n#Below configuration is inserted by script." > zoo-temp
-for (( i=$new; i<`expr $new + $size - 1`; i++))
-do
-   newip=$(echo $oldip | cut -d. -f4 --complement).$i
-   echo -n "$newip:2181," >> zk-temp
-   echo "server.$i=zookeeper$i:2888:3888" >> zoo-temp
-done
-   new=`expr $new + $size - 1`
-   newip=$(echo $oldip | cut -d. -f4 --complement).$new
-   echo "$newip:2181/mesos" >> zk-temp
-   echo "server.$new=zookeeper$new:2888:3888" >> zoo-temp
 
-cat zk-temp > /dev/null | sudo tee /etc/mesos/zk
-sudo sed -i '/#server.3=/r zoo-temp' /etc/zookeeper/conf/zoo.cfg
+for (( k=$new; k<`expr $new + $size - 1`; k++))
+do
+   newip=$(echo $oldip | cut -d. -f4 --complement).$k
+   echo -n "$newip:2181," >> zk-temp
+   echo "server.$k=zookeeper$k:2888:3888" >> zoo-temp
+done
+   i=`expr $new + $size - 1`
+   newip=$(echo $oldip | cut -d. -f4 --complement).$k
+   echo "$newip:2181/mesos" >> zk-temp
+   echo "server.$k=zookeeper$k:2888:3888" >> zoo-temp
+
+# "sudo cat" does not work. Need tp shell (-s) sudo and quote command. 
+`cat zk-temp > /etc/mesos/zk` | sudo -s
+
+k=$(awk '/.2888.3888/{print NR;exit}' /etc/zookeeper/conf/zoo.cfg)
+sudo sed -i '/.2888.3888/d' /etc/zookeeper/conf/zoo.cfg
+sudo sed -i "$k r zoo-temp" /etc/zookeeper/conf/zoo.cfg
+
 rm zk-temp zoo-temp
