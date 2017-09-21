@@ -1,7 +1,7 @@
 # Mesosphere cluster installation on Ubuntu 16.04.
 Run scripts in following order
 1) Clone ubuntu VM in Virtualbox (or other hypervisor)
-2) git clone <uDocker> & git clone <mesos>
+2) git clone [uDocker] & git clone [mesos]
 3) ~/uDocker/docker-install.sh - install Docker
 4) ./mesos-install.sh slave - Install mesos (slave & master)
 5) Clone slave VM in Virtualbox (or other hypervisor) 
