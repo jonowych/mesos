@@ -1,8 +1,7 @@
 #!/bin/bash
 
-if [[ $1 = "master" || $1 = "slave" ]]
-   then echo "$(tput setaf 6)Configuring Mesosphere $1 ....$(tput sgr0)"
-   else echo "!! $(tput setaf 1)Specify master or slave !!"
+if [[ ! $1 = "master" && ! $1 = "slave" ]]
+   then echo "!! $(tput setaf 1)Specify master or slave !!"
         echo $(tput sgr0) && exit ; fi
 
 # Add GPG key for the official mesosphere repository
@@ -16,14 +15,11 @@ CODENAME=$(lsb_release -cs)
 echo "deb http://repos.mesosphere.com/${DISTRO} ${CODENAME} main" | sudo tee /etc/apt/sources.list.d/mesosphere.list
 sudo apt-get -y update
 
-# Install packages on slave
-sudo apt-get -y install mesos 		## include zookeeper
-
-# Install packages on master
+# Install Mesosphere packages
 echo
 if [ $1 = "slave" ] ; then
    echo "$(tput setaf 3)!! Installing Mesosphere $1 package. !!"
-   sudo apt-get -y install mesos
+   sudo apt-get -y install mesos	## include zookeeper
    echo $(tput sgr0) ; fi
 
 if [ $1 = "master" ] ; then 
