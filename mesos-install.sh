@@ -1,13 +1,5 @@
 #!/bin/bash
 
-echo
-if [ "${USER}" = "root" ] ; then
-   echo -e "$(tput setaf 1)!! Do not use sudo for installation$(tput sgr0)"
-   exit 0 ; fi
-duser="${USER}" 
-
-echo && read -p "Install Mesosphere master node package (y)es?  " answer
-
 # Add GPG key for the official mesosphere repository
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv E56151BF
 
@@ -23,6 +15,14 @@ sudo apt-get -y update
 sudo apt-get -y install mesos 		## include zookeeper
 
 # Install packages on master
-if [ answer = "y" ] ; then sudo apt-get -y install marathon, and chronos ; fi
+echo
+if [ $# -eq 1 ] 
+   then if [ $1 = "master" ] 
+        then echo "$(tput setaf 3)!! Installing Mesosphere master package. !!$(tput sgr0)"
+             sudo apt-get -y install marathon chronos
+        else echo -e "!! Enter $(tput setaf 1)$0 master$(tput sgr0) for master installation!!"
+        fi
+   echo
+   fi
 
-echo && echo "$(tput setaf 6)!! Mesosphere installation has finished. !!$(tput sgr0)"
+echo "$(tput setaf 6)!! Mesosphere installation has finished. !!$(tput sgr0)"
