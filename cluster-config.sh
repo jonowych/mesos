@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if [ ! "${USER}" = "root" ] ; then
+   echo -e "!! Enter $(tput setaf 1)sudo $0$(tput sgr0) to update !!"
+   echo && exit 0 ; fi
+
 echo
 read -p "How many nodes in Mesosphere cluster: " size
 read -p "Enter first node number in cluster: " new
@@ -32,16 +36,16 @@ done
    echo "server.$k=zookeeper$k:2888:3888" >> zoo-temp
 
 # import zookeeper connection info to system config files.
-# "sudo cat" does not work. Need tp shell (-s) sudo and quote command. 
-`cat zk-temp > /etc/mesos/zk` | sudo -s
+cat zk-temp > /etc/mesos/zk
 
 k=`expr $(awk '/.2888.3888/{print NR;exit}' /etc/zookeeper/conf/zoo.cfg) - 1`
-sudo sed -i '/.2888.3888/d' /etc/zookeeper/conf/zoo.cfg
-sudo sed -i "$k r zoo-temp" /etc/zookeeper/conf/zoo.cfg
+sed -i '/.2888.3888/d' /etc/zookeeper/conf/zoo.cfg
+sed -i "$k r zoo-temp" /etc/zookeeper/conf/zoo.cfg
 
 rm zk-temp zoo-temp
 
 # set up quorum for over 50 percent of the master members in cluster
 let "size = size/2 +size%2"
-`echo $size > /etc/mesos-master/quorum` | sudo -s
-cat /etc/mesos-master/quorum
+echo $size > /etc/mesos-master/quorum
+echo "$(tput setaf 6)!! Cluster configuration has finished. !!$(tput sgr0)"
+echo

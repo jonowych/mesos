@@ -19,11 +19,12 @@ intf=$(ifconfig | grep -m1 ^e | awk '{print $1 }')
 oldhost=$(hostname)
 oldip=$(ifconfig | grep $intf -A 1 | grep inet | awk '{ print $2 }' | awk -F: '{ print $2 }')
 
-newhost=$(echo $oldhost | cut -d- -f1)-$new
-newip=$(echo $oldip | cut -d. -f4 --complement).$new
+read -p "Change hostname? [enter] for no change: " newhost
+if [ -z $newhost ]
+   then newhost=$(echo $oldhost | cut -d- -f1)-$new
+   else newhost=$newhost-$new ; fi
 
-read -p "Change hostname? [enter] for no change: " new
-if [ ! -z $new ] ; then  newhost=$new-$(echo $newhost | cut -d- -f2) ; fi
+newip=$(echo $oldip | cut -d. -f4 --complement).$new
 
 echo
 echo "$(tput setaf 6)!! Update node name from $oldhost to $newhost !!"
