@@ -2,19 +2,19 @@
 
 if [ ! "${USER}" = "root" ] ; then
    echo "!! Enter command as $(tput setaf 1)sudo $0 <arg> !!"
-   echo $(tput sgr0) && exit 0 ; fi
+   echo $(tput sgr0) && exit ; fi
 
 if [[ $1 = "master" || $1 = "slave" ]]
-   then echo "$(tput setaf 6)Configuring Mesosphere $1 ....$(tput sgr0)"
-   else echo "!! Specify $(tput setaf 1)master or slave !!"
+   then echo "$(tput setaf 6)Configuring Mesosphere $1 ...."
+   else echo "!!$(tput setaf 1) Specify master or slave !!"
         echo $(tput sgr0) && exit ; fi
 
 if [ -z $(which mesos) ] ; then
-   echo "!! $(tput setaf 1) mesos is not installed !!"
+   echo "!!$(tput setaf 1) mesos is not installed !!"
    echo $(tput sgr0) && exit ; fi
 
 if [[ -z $(which marathon) && $1 = "master" ]] ; then
-   echo "!! $(tput setaf 1) marathon is not installed !!"
+   echo "!!$(tput setaf 1) marathon is not installed !!"
    echo $(tput sgr0) && exit ; fi
 
 echo && read -p "Please enter host node number: " new
