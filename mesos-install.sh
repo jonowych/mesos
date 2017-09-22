@@ -19,7 +19,7 @@ sudo apt-get -y update
 # Those downgraded packages will break zookeeper daeman as "active (exited)".
 # 
 # Install zookeeperd before mesos to work around the problem.
-sudo apt-get install -y zookeeperd
+sudo apt-get -y install zookeeperd
 
 # Install Mesosphere packages
 echo
