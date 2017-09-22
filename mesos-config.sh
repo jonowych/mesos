@@ -4,16 +4,8 @@ if [ ! "${USER}" = "root" ] ; then
    echo "!! Enter command as $(tput setaf 1)sudo $0 <arg> !!"
    echo $(tput sgr0) && exit ; fi
 
-if [[ $1 != "master" && $1 != "slave" ]] ; then
-   echo "!!$(tput setaf 1) Specify master or slave !!"
-   echo $(tput sgr0) && exit ; fi
-
 if [ -z $(which mesos) ] ; then
    echo "!!$(tput setaf 1) mesos is not installed !!"
-   echo $(tput sgr0) && exit ; fi
-
-if [[ -z $(which marathon) && $1 = "master" ]] ; then
-   echo "!!$(tput setaf 1) marathon is not installed !!"
    echo $(tput sgr0) && exit ; fi
 
 echo && read -p "Please enter host node number: " new
@@ -48,7 +40,7 @@ sed -i "s/$oldhost/$newhost/" /etc/hostname
 sed -i "s/$oldhost/$newhost/" /etc/hosts
 sed -i "s/$oldip/$newip/" /etc/network/interfaces
 
-if [ $1 = "slave" ] ; then
+if [ -z $(which marathon) ] ; then
    # update mesos and zookeeper data
    service zookeeper stop	# slave does not run zookeeper
    echo manual > /etc/init/zookeeper.override
@@ -57,9 +49,8 @@ if [ $1 = "slave" ] ; then
 
    echo $newip > /etc/mesos-slave/ip
    echo $newip > /etc/mesos-slave/hostname
-fi
 
-if [ $1 = "master" ] ; then
+else
    # update mesos and zookeeper data
    service mesos-slave stop
    echo manual > /etc/init/mesos-slave.override
