@@ -15,6 +15,17 @@ CODENAME=$(lsb_release -cs)
 echo "deb http://repos.mesosphere.com/${DISTRO} ${CODENAME} main" | sudo tee /etc/apt/sources.list.d/mesosphere.list
 sudo apt-get -y update
 
+# > sudo apt-get install libevent-dev
+# > sudo apt-get install libssl-dev
+# Above install command get below output in "libssl-dev" :
+#
+# libssl-dev : Depends: libssl1.0.0 (= 1.0.2g-1ubuntu4) 
+#                         but 1.0.2g-1ubuntu4.8 is to be installed
+#
+# force downgrade of libssl1.0.0 and libevent-2.0-5
+
+sudo apt-get install libssl1.0.0=1.0.2g-1ubuntu4 libevent-2.0-5=2.0.21-stable-2
+
 # Install Mesosphere packages
 echo
 if [ $1 = "slave" ] ; then
