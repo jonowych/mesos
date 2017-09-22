@@ -24,7 +24,9 @@ sudo apt-get -y update
 #
 # force downgrade of libssl1.0.0 and libevent-2.0-5
 
-sudo apt-get install libssl1.0.0=1.0.2g-1ubuntu4 libevent-2.0-5=2.0.21-stable-2
+# sudo apt-get install libssl1.0.0=1.0.2g-1ubuntu4 libevent-2.0-5=2.0.21-stable-2
+
+sudo apt-get install zookeeperd
 
 # Install Mesosphere packages
 echo
