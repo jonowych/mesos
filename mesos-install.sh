@@ -15,7 +15,7 @@ if [ -z $new ] || [ $new -lt 1 ] || [ $new -gt 254 ] ; then
    exit ; fi
 
 read -p "How many nodes in Mesosphere cluster: " size
-if [ $size -lt 1 ] || [ $size -gt 10 ] ; then
+if [ $size -lt 1 ] || [ $size -gt 10 ] 2>/dev/null ; then
    echo "$(tput setaf 1)!! Exit -- Please enter cluster size between 1 and 10 !!$(tput sgr0)"
    exit ; fi
    
