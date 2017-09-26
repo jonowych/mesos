@@ -31,15 +31,29 @@ sudo apt-get -y install zookeeperd
 # Install Mesosphere packages
 echo
 if [ $1 = "slave" ] ; then
+
+# disable zookeeper
+   sudo systemctl stop zookeeper
+   sudo systemctl disable zookeeper
+
+# install meso
    echo "$(tput setaf 3)!! Installing Mesosphere $1 package. !!"
    sudo apt-get -y install mesos="$mesos_ver"	## include zookeeper
    echo $(tput sgr0) ; fi
 
-if [ $1 = "master" ] ; then 
+if [ $1 = "master" ] ; then
+
+# enable zookeeper
+   sudo systemctl restart zookeeper
+   sudo systemctl enable zookeeper
+
+# install meso, marathon and chronos
    echo "$(tput setaf 3)!! Installing Mesosphere $1 package. !!"
    sudo apt-get -y install mesos="$mesos_ver"
    sudo apt-get -y install marathon="marathon_ver"
    sudo apt-get -y install chronos
    echo $(tput sgr0) ; fi 
+
+
 
 echo "$(tput setaf 6)!! Mesosphere installation has finished. !!$(tput sgr0)"
