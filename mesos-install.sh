@@ -12,7 +12,7 @@ marathon_ver=1.4.3-1.0.649.ubuntu1604
 # chronos_ver=2.5.0-0.1.20170816233446.ubuntu1604
 
 # Add GPG key for the official mesosphere repository
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv E56151BF
+apt-key adv --keyserver keyserver.ubuntu.com --recv E56151BF
 
 # Add mesosphere repository to APT sources
 DISTRO=$(lsb_release -is | tr '[:upper:]' '[:lower:]')
@@ -20,24 +20,23 @@ DISTRO=$(lsb_release -is | tr '[:upper:]' '[:lower:]')
 # Add repository according linux distro
 CODENAME=$(lsb_release -cs)
 echo "deb http://repos.mesosphere.com/${DISTRO} ${CODENAME} main" | sudo tee /etc/apt/sources.list.d/mesosphere.list
-sudo apt-get -y update
+apt-get -y update
 
 # Although mesos includes zookeeper, it requires downgraded versions of libevent-dev & libssl-dev.
 # Those downgraded packages will break zookeeper daeman as "active (exited)".
 # 
 # Install zookeeperd before mesos to work around the problem.
-sudo apt-get -y install zookeeperd
+apt-get -y install zookeeperd
 
 # Install Mesosphere packages
-
 echo "$(tput setaf 3)!! Installing zookeeper !!$(tput sgr0)"
-   sudo apt-get -y install zookeeperd
-   sudo systemctl start zookeeper
-   sudo systemctl enable zookeeper
+apt-get -y install zookeeperd
+systemctl start zookeeper
+systemctl enable zookeeper
 
 # ------------
 echo "$(tput setaf 3)!! Installing mesos=$mesos_ver !!$(tput sgr0)"
-   sudo apt-get -y install mesos="$mesos_ver"
+apt-get -y install mesos="$mesos_ver"
 
 cat <<EOF_mesos > mesos-master.service
 [Unit]
@@ -59,7 +58,7 @@ EOF_mesos
 
 # ------------
 echo "$(tput setaf 3)!! Installing marathon=$marathon_ver !!$(tput sgr0)"
-   sudo apt-get -y install marathon="$marathon_ver"
+apt-get -y install marathon="$marathon_ver"
 
 cat <<EOF_marathon > marathon.service
 [Unit]
@@ -74,14 +73,14 @@ ExecStart=/usr/local/bin/marathon
 WantedBy=multi-user.target
 EOF_marathon
 
-   sudo mv mesos-master.service /etc/systemd/system/
-   sudo systemctl daemon-reload
-   sudo systemctl start marathon.service
-   sudo systemctl enable marathon.service
+mv mesos-master.service /etc/systemd/system/
+systemctl daemon-reload
+systemctl start marathon.service
+systemctl enable marathon.service
 
 # ------------
 echo "$(tput setaf 3)!! Installing chronos !!$(tput sgr0)"
-   sudo apt-get -y install chronos
+apt-get -y install chronos
    
 cat <<EOF_chronos > chronos.service
 [Unit]
@@ -96,10 +95,10 @@ ExecStart=/usr/local/bin/chronos
 WantedBy=multi-user.target
 EOF_chronos
 
-   sudo mv chronos.service /etc/systemd/system/
-   sudo systemctl daemon-reload
-   sudo systemctl start chronos.service
-   sudo systemctl enable chronos.service
+mv chronos.service /etc/systemd/system/
+systemctl daemon-reload
+systemctl start chronos.service
+systemctl enable chronos.service
 
 # ------------
 echo "$(tput setaf 6)!! Mesosphere installation has finished. !!$"
