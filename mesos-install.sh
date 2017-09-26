@@ -100,7 +100,7 @@ After=zookeeper.service
 Requires=zookeeper.service
 
 [Service]
-ExecStart=/usr/local/sbin/mesos-master
+ExecStart=/usr/sbin/mesos-master
 
 [Install]
 WantedBy=multi-user.target
@@ -129,7 +129,7 @@ After=mesos-master.service
 Requires=mesos-master.service
 
 [Service]
-ExecStart=/usr/local/bin/marathon
+ExecStart=/usr/bin/marathon
 
 [Install]
 WantedBy=multi-user.target
@@ -152,7 +152,7 @@ After=marathon.service
 Requires=marathon.service
 
 [Service]
-ExecStart=/usr/local/bin/chronos
+ExecStart=/usr/bin/chronos
 
 [Install]
 WantedBy=multi-user.target
