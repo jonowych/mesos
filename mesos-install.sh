@@ -4,6 +4,24 @@ if [ ! "${USER}" = "root" ] ; then
    echo "!! Enter command as $(tput setaf 1)sudo $0 <arg> !!"
    echo $(tput sgr0) && exit ; fi
 
+# Get existing IP information
+echo
+read -p "Enter first node number in cluster: " new
+read -p "How many nodes in Mesosphere cluster: " size
+
+if ! [ $new -eq $new ] 2>/dev/null ; then
+   echo "$(tput setaf 1)!! Exit -- Sorry, integer only !!$(tput sgr0)"
+   exit ; fi
+if [ -z $new ] || [ $new -lt 1 ] || [ $new -gt 254 ] ; then
+   echo "$(tput setaf 1)!! Exit -- node number out of range !!$(tput sgr0)"
+   exit ; fi
+
+new=$(echo $new | sed 's/^0*//')
+intf=$(ifconfig | grep -m1 ^e | awk '{print $1 }')
+
+oldhost=$(hostname)
+oldip=$(ifconfig | grep $intf -A 1 | grep inet | awk '{ print $2 }' | awk -F: '{ print $2 }')
+
 # Begin with "#" are latest version 
 # zookeeper_ver=3.4.8-1
 # mesos_ver=1.3.1-2.0.1
@@ -23,24 +41,6 @@ DISTRO=$(lsb_release -is | tr '[:upper:]' '[:lower:]')
 CODENAME=$(lsb_release -cs)
 echo "deb http://repos.mesosphere.com/${DISTRO} ${CODENAME} main" | sudo tee /etc/apt/sources.list.d/mesosphere.list
 apt-get -y update
-
-# Get existing IP information
-echo
-read -p "Enter first node number in cluster: " new
-read -p "How many nodes in Mesosphere cluster: " size
-
-if ! [ $new -eq $new ] 2>/dev/null ; then
-   echo "$(tput setaf 1)!! Exit -- Sorry, integer only !!$(tput sgr0)"
-   exit ; fi
-if [ -z $new ] || [ $new -lt 1 ] || [ $new -gt 254 ] ; then
-   echo "$(tput setaf 1)!! Exit -- node number out of range !!$(tput sgr0)"
-   exit ; fi
-
-new=$(echo $new | sed 's/^0*//')
-intf=$(ifconfig | grep -m1 ^e | awk '{print $1 }')
-
-oldhost=$(hostname)
-oldip=$(ifconfig | grep $intf -A 1 | grep inet | awk '{ print $2 }' | awk -F: '{ print $2 }')
 
 # Although mesos includes zookeeper, it requires downgraded versions of libevent-dev & libssl-dev.
 # Those downgraded packages will break zookeeper daeman as "active (exited)".
