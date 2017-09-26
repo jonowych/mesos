@@ -38,7 +38,6 @@ echo "$(tput setaf 3)!! Installing zookeeper !!$(tput sgr0)"
 
 echo "$(tput setaf 3)!! Installing mesos=$mesos_ver !!$(tput sgr0)"
    sudo apt-get -y install mesos="$mesos_ver"
-   # write config.yml
 
 cat <<EOF_mesos > mesos-master.service
 [Unit]
@@ -81,6 +80,24 @@ EOF_marathon
 
 echo "$(tput setaf 3)!! Installing chronos !!$(tput sgr0)"
    sudo apt-get -y install chronos
+   
+cat <<EOF_chronos > chronos.service
+[Unit]
+Description=Chronos Service
+After=marathon.service
+Requires=marathon.service
+
+[Service]
+ExecStart=/usr/local/bin/chronos
+
+[Install]
+WantedBy=multi-user.target
+EOF_chronos
+
+   sudo mv chronos.service /etc/systemd/system/
+   sudo systemctl daemon-reload
+   sudo systemctl start chronos.service
+   sudo systemctl enable chronos.service
 
 fi 
 
