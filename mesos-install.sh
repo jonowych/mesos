@@ -88,6 +88,7 @@ done
    echo $size > /etc/mesos-master/quorum
 
 # set up mesos-master IP
+   newip=$(echo $oldip | cut -d. -f4 --complement).$new
    echo $newip > /etc/mesos-master/ip
    echo $newip > /etc/mesos-master/hostname
 
