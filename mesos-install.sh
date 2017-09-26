@@ -4,12 +4,14 @@ if [ ! "${USER}" = "root" ] ; then
    echo "!! Enter command as $(tput setaf 1)sudo $0 <arg> !!"
    echo $(tput sgr0) && exit ; fi
 
+# Begin with "#" are latest version 
 # zookeeper_ver=3.4.8-1
 # mesos_ver=1.3.1-2.0.1
-mesos_ver=1.1.1-2.0.1
 # marathon_ver=1.4.8-1.0.660.ubuntu1604
-marathon_ver=1.4.3-1.0.649.ubuntu1604
 # chronos_ver=2.5.0-0.1.20170816233446.ubuntu1604
+# Set up mesos and marathon package version.
+   marathon_ver=1.4.3-1.0.649.ubuntu1604
+   mesos_ver=1.1.1-2.0.1
 
 # Add GPG key for the official mesosphere repository
 apt-key adv --keyserver keyserver.ubuntu.com --recv E56151BF
@@ -24,15 +26,15 @@ apt-get -y update
 
 # Get existing IP information
 echo
-read -p "How many nodes in Mesosphere cluster: " size
 read -p "Enter first node number in cluster: " new
+read -p "How many nodes in Mesosphere cluster: " size
 
 if ! [ $new -eq $new ] 2>/dev/null ; then
-        echo "$(tput setaf 1)!! Exit -- Sorry, integer only !!$(tput sgr0)"
-        exit ; fi
+   echo "$(tput setaf 1)!! Exit -- Sorry, integer only !!$(tput sgr0)"
+   exit ; fi
 if [ -z $new ] || [ $new -lt 1 ] || [ $new -gt 254 ] ; then
-        echo "$(tput setaf 1)!! Exit -- node number out of range !!$(tput sgr0)"
-        exit ; fi
+   echo "$(tput setaf 1)!! Exit -- node number out of range !!$(tput sgr0)"
+   exit ; fi
 
 new=$(echo $new | sed 's/^0*//')
 intf=$(ifconfig | grep -m1 ^e | awk '{print $1 }')
@@ -45,9 +47,9 @@ oldip=$(ifconfig | grep $intf -A 1 | grep inet | awk '{ print $2 }' | awk -F: '{
 # 
 # Install zookeeperd before mesos to work around the problem.
 
-# ------------
-echo "$(tput setaf 3)!! Installing zookeeper !!$(tput sgr0)"
-apt-get -y install zookeeperd
+# (1) Install zookeeper
+   echo "$(tput setaf 3)!! Installing zookeeper !!$(tput sgr0)"
+   apt-get -y install zookeeperd
 
 # configure zookeeper ID and connection info in a temporary file
 echo $new > /etc/zookeeper/conf/myid
@@ -58,20 +60,19 @@ do
 done
 
 # import zookeeper connection info to system config files.
-k=`expr $(awk '/.2888.3888/{print NR;exit}' /etc/zookeeper/conf/zoo.cfg) - 1`
-sed -i -e '/.2888.3888/d' -e "$k r zoo-temp" /etc/zookeeper/conf/zoo.cfg
-rm zoo-temp
+   k=`expr $(awk '/.2888.3888/{print NR;exit}' /etc/zookeeper/conf/zoo.cfg) - 1`
+   sed -i -e '/.2888.3888/d' -e "$k r zoo-temp" /etc/zookeeper/conf/zoo.cfg
+   rm zoo-temp
 
-systemctl start zookeeper
-systemctl enable zookeeper
+# Start zookeeper service after configuration set up
+   systemctl start zookeeper
+   systemctl enable zookeeper
 
-# ------------
-echo "$(tput setaf 3)!! Installing mesos=$mesos_ver !!$(tput sgr0)"
-apt-get -y install mesos="$mesos_ver"
+# (2) Install mesos
+   echo "$(tput setaf 3)!! Installing mesos=$mesos_ver !!$(tput sgr0)"
+   apt-get -y install mesos="$mesos_ver"
 
-echo $newip > /etc/mesos-master/ip
-echo $newip > /etc/mesos-master/hostname
-
+# set up /etc/mesos/zk
 echo -n "zk://"  > /etc/mesos/zk
 for (( k=$new; k<`expr $new + $size - 1`; k++))
 do
@@ -81,10 +82,16 @@ done
    k=`expr $new + $size - 1`
    newip=$(echo $oldip | cut -d. -f4 --complement).$k
    echo "$newip:2181/mesos" >> /etc/mesos/zk
-   echo "$(tput setaf 6)!! /etc/mesos/zk has been updated. !!$(tput sgr0)"
-   echo
 
+# set up quorum (>50% of master members in cluster)
+   let "size = size/2 +size%2"
+   echo $size > /etc/mesos-master/quorum
 
+# set up mesos-master IP
+   echo $newip > /etc/mesos-master/ip
+   echo $newip > /etc/mesos-master/hostname
+
+# set up mesos-master.service
 cat <<EOF_mesos > /etc/systemd/system/mesos-master.service
 [Unit]
 Description=Mesos Master Service
@@ -98,20 +105,22 @@ ExecStart=/usr/local/sbin/mesos-master
 WantedBy=multi-user.target
 EOF_mesos
 
-systemctl daemon-reload
-systemctl start mesos-master.service
-systemctl enable mesos-master
+# Start mesos-master service after configuration set up
+   systemctl daemon-reload
+   systemctl start mesos-master.service
+   systemctl enable mesos-master
 
-# ------------
-echo "$(tput setaf 3)!! Installing marathon=$marathon_ver !!$(tput sgr0)"
-apt-get -y install marathon="$marathon_ver"
+# (3) Install marathon
+   echo "$(tput setaf 3)!! Installing marathon=$marathon_ver !!$(tput sgr0)"
+   apt-get -y install marathon="$marathon_ver"
 
-# update marathon info data
-mkdir -p /etc/marathon/conf
-cp /etc/mesos-master/hostname /etc/marathon/conf/
-cp /etc/mesos/zk /etc/marathon/conf/master
-sed -i 's/mesos/marathon/' /etc/marathon/conf/master
+# set up marathon info data
+   mkdir -p /etc/marathon/conf
+   cp /etc/mesos-master/hostname /etc/marathon/conf/
+   cp /etc/mesos/zk /etc/marathon/conf/master
+   sed -i 's/mesos/marathon/' /etc/marathon/conf/master
    
+# set up marathon startup service 
 cat <<EOF_marathon > /etc/systemd/system/marathon.service
 [Unit]
 Description=Marathon Service
@@ -125,14 +134,16 @@ ExecStart=/usr/local/bin/marathon
 WantedBy=multi-user.target
 EOF_marathon
 
-systemctl daemon-reload
-systemctl start marathon.service
-systemctl enable marathon.service
+# Start marathod service after configuration set up
+   systemctl daemon-reload
+   systemctl start marathon.service
+   systemctl enable marathon.service
 
-# ------------
-echo "$(tput setaf 3)!! Installing chronos !!$(tput sgr0)"
-apt-get -y install chronos
+# (4) Install chronos
+   echo "$(tput setaf 3)!! Installing chronos !!$(tput sgr0)"
+   apt-get -y install chronos
    
+# set up chronos start up service
 cat <<EOF_chronos > /etc/systemd/system/chronos.service
 [Unit]
 Description=Chronos Service
@@ -146,10 +157,12 @@ ExecStart=/usr/local/bin/chronos
 WantedBy=multi-user.target
 EOF_chronos
 
-systemctl daemon-reload
-systemctl start chronos.service
-systemctl enable chronos.service
+# Start chronos service after configuration set up
+   systemctl daemon-reload
+   systemctl start chronos.service
+   systemctl enable chronos.service
 
 # ------------
-echo "$(tput setaf 6)!! Mesosphere installation has finished. !!$"
+echo $(tput setaf 6)
+echo "!! Mesosphere installation has finished. !!"
 echo $(tput sgr0)
