@@ -4,6 +4,13 @@ if [[ $1 != "master" && $1 != "slave" ]]
    then echo "!! $(tput setaf 1)Specify master or slave !!"
         echo $(tput sgr0) && exit ; fi
 
+# zookeeper_ver=3.4.8-1
+# mesos_ver=1.3.1-2.0.1
+mesos_ver=1.1.1-2.0.1
+# marathon_ver=1.4.8-1.0.660.ubuntu1604
+marathon_ver=1.4.3-1.0.649.ubuntu1604
+# chronos_ver=2.5.0-0.1.20170816233446.ubuntu1604
+
 # Add GPG key for the official mesosphere repository
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv E56151BF
 
