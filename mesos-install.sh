@@ -49,7 +49,8 @@ oldip=$(ifconfig | grep $intf -A 1 | grep inet | awk '{ print $2 }' | awk -F: '{
 echo "$(tput setaf 3)!! Installing zookeeper !!$(tput sgr0)"
 apt-get -y install zookeeperd
 
-# set up zookeeper connection info in a temporary file
+# configure zookeeper ID and connection info in a temporary file
+echo $new > /etc/zookeeper/conf/myid
 for (( k=$new; k<`expr $new + $size`; k++))
 do
    newip=$(echo $oldip | cut -d. -f4 --complement).$k
@@ -67,6 +68,9 @@ systemctl enable zookeeper
 # ------------
 echo "$(tput setaf 3)!! Installing mesos=$mesos_ver !!$(tput sgr0)"
 apt-get -y install mesos="$mesos_ver"
+
+echo $newip > /etc/mesos-master/ip
+echo $newip > /etc/mesos-master/hostname
 
 cat <<EOF_mesos > /etc/systemd/system/mesos-master.service
 [Unit]
