@@ -89,6 +89,12 @@ systemctl enable mesos-master
 echo "$(tput setaf 3)!! Installing marathon=$marathon_ver !!$(tput sgr0)"
 apt-get -y install marathon="$marathon_ver"
 
+# update marathon info data
+mkdir -p /etc/marathon/conf
+cp /etc/mesos-master/hostname /etc/marathon/conf/
+cp /etc/mesos/zk /etc/marathon/conf/master
+sed -i 's/mesos/marathon/' /etc/marathon/conf/master
+   
 cat <<EOF_marathon > /etc/systemd/system/marathon.service
 [Unit]
 Description=Marathon Service
