@@ -7,15 +7,21 @@ if [ ! "${USER}" = "root" ] ; then
 # Get existing IP information
 echo
 read -p "Enter first node number in cluster: " new
-read -p "How many nodes in Mesosphere cluster: " size
 
-if ! [ $new -eq $new ] 2>/dev/null ; then
-   echo "$(tput setaf 1)!! Exit -- Sorry, integer only !!$(tput sgr0)"
-   exit ; fi
+# if ! [ $new -eq $new ] 2>/dev/null ; then
+#    echo "$(tput setaf 1)!! Exit -- Sorry, integer only !!$(tput sgr0)"
+#   exit ; fi
 if [ -z $new ] || [ $new -lt 1 ] || [ $new -gt 254 ] ; then
-   echo "$(tput setaf 1)!! Exit -- node number out of range !!$(tput sgr0)"
+   echo "$(tput setaf 1)!! Exit -- node number is out of range !!$(tput sgr0)"
    exit ; fi
 
+read -p "How many nodes in Mesosphere cluster: " size
+if [ $new -lt 1 ] || [ $new -gt 10 ] ; then
+   echo "$(tput setaf 1)!! Exit -- enter cluster size between 1 and 10 !!$(tput sgr0)"
+   exit ; fi
+   
+exit   
+   
 new=$(echo $new | sed 's/^0*//')
 intf=$(ifconfig | grep -m1 ^e | awk '{print $1 }')
 
