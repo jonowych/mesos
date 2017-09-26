@@ -72,6 +72,19 @@ apt-get -y install mesos="$mesos_ver"
 echo $newip > /etc/mesos-master/ip
 echo $newip > /etc/mesos-master/hostname
 
+echo -n "zk://"  > /etc/mesos/zk
+for (( k=$new; k<`expr $new + $size - 1`; k++))
+do
+   newip=$(echo $oldip | cut -d. -f4 --complement).$k
+   echo -n "$newip:2181," >> /etc/mesos/zk
+done
+   k=`expr $new + $size - 1`
+   newip=$(echo $oldip | cut -d. -f4 --complement).$k
+   echo "$newip:2181/mesos" >> /etc/mesos/zk
+   echo "$(tput setaf 6)!! /etc/mesos/zk has been updated. !!$(tput sgr0)"
+   echo
+
+
 cat <<EOF_mesos > /etc/systemd/system/mesos-master.service
 [Unit]
 Description=Mesos Master Service
