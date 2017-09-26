@@ -32,12 +32,14 @@ sudo apt-get -y install zookeeperd
 echo
 if [ $1 = "slave" ] ; then
    echo "$(tput setaf 3)!! Installing Mesosphere $1 package. !!"
-   sudo apt-get -y install mesos	## include zookeeper
+   sudo apt-get -y install mesos="$mesos_ver"	## include zookeeper
    echo $(tput sgr0) ; fi
 
 if [ $1 = "master" ] ; then 
    echo "$(tput setaf 3)!! Installing Mesosphere $1 package. !!"
-   sudo apt-get -y install mesos marathon chronos
+   sudo apt-get -y install mesos="$mesos_ver"
+   sudo apt-get -y install marathon="marathon_ver"
+   sudo apt-get -y install chronos
    echo $(tput sgr0) ; fi 
 
 echo "$(tput setaf 6)!! Mesosphere installation has finished. !!$(tput sgr0)"
