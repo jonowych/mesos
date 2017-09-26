@@ -1,8 +1,8 @@
 #!/bin/bash
 
-if [[ $1 != "master" && $1 != "slave" ]]
-   then echo "!! $(tput setaf 1)Specify master or slave !!"
-        echo $(tput sgr0) && exit ; fi
+if [ ! "${USER}" = "root" ] ; then
+   echo "!! Enter command as $(tput setaf 1)sudo $0 <arg> !!"
+   echo $(tput sgr0) && exit ; fi
 
 # zookeeper_ver=3.4.8-1
 # mesos_ver=1.3.1-2.0.1
@@ -30,12 +30,12 @@ sudo apt-get -y install zookeeperd
 
 # Install Mesosphere packages
 
-if [ $1 = "master" ] ; then
 echo "$(tput setaf 3)!! Installing zookeeper !!$(tput sgr0)"
    sudo apt-get -y install zookeeperd
    sudo systemctl start zookeeper
    sudo systemctl enable zookeeper
 
+# ------------
 echo "$(tput setaf 3)!! Installing mesos=$mesos_ver !!$(tput sgr0)"
    sudo apt-get -y install mesos="$mesos_ver"
 
@@ -57,6 +57,7 @@ EOF_mesos
    sudo systemctl start mesos-master.service
    sudo systemctl enable mesos-master
 
+# ------------
 echo "$(tput setaf 3)!! Installing marathon=$marathon_ver !!$(tput sgr0)"
    sudo apt-get -y install marathon="$marathon_ver"
 
@@ -78,6 +79,7 @@ EOF_marathon
    sudo systemctl start marathon.service
    sudo systemctl enable marathon.service
 
+# ------------
 echo "$(tput setaf 3)!! Installing chronos !!$(tput sgr0)"
    sudo apt-get -y install chronos
    
@@ -99,17 +101,6 @@ EOF_chronos
    sudo systemctl start chronos.service
    sudo systemctl enable chronos.service
 
-fi 
-
-if [ $1 = "slave" ] ; then
-# disable zookeeper
-   sudo systemctl stop zookeeper
-   sudo systemctl disable zookeeper
-
-# install meso
-   echo "$(tput setaf 3)!! Installing Mesosphere $1 package. !!"
-   sudo apt-get -y install mesos="$mesos_ver"	## include zookeeper
-   echo $(tput sgr0)
-fi
-
-echo "$(tput setaf 6)!! Mesosphere installation has finished. !!$(tput sgr0)"
+# ------------
+echo "$(tput setaf 6)!! Mesosphere installation has finished. !!$"
+echo $(tput sgr0)
