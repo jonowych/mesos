@@ -47,13 +47,52 @@ if [ $1 = "master" ] ; then
    sudo systemctl restart zookeeper
    sudo systemctl enable zookeeper
 
-# install meso, marathon and chronos
-   echo "$(tput setaf 3)!! Installing Mesosphere $1 package. !!"
+echo "$(tput setaf 3)!! Installing mesos=$mesos_ver !!$(tput sgr0)"
    sudo apt-get -y install mesos="$mesos_ver"
-   sudo apt-get -y install marathon="marathon_ver"
+   # write config.yml
+
+cat <<EOF_mesos > mesos-master.service
+[Unit]
+Description=Mesos Master Service
+After=zookeeper.service
+Requires=zookeeper.service
+
+[Service]
+ExecStart=/usr/local/sbin/mesos-master
+
+[Install]
+WantedBy=multi-user.target
+EOF_mesos
+
+   sudo mv mesos-master.service /etc/systemd/system/
+   sudo systemctl daemon-reload
+   sudo systemctl start mesos-master.service
+   sudo systemctl enable mesos-master
+
+echo "$(tput setaf 3)!! Installing marathon=$marathon_ver !!$(tput sgr0)"
+   sudo apt-get -y install marathon="$marathon_ver"
+
+cat <<EOF_marathon > marathon.service
+[Unit]
+Description=Marathon Service
+After=mesos-master.service
+Requires=mesos-master.service
+
+[Service]
+ExecStart=/usr/local/bin/marathon
+
+[Install]
+WantedBy=multi-user.target
+EOF_marathon
+
+   sudo mv mesos-master.service /etc/systemd/system/
+   sudo systemctl daemon-reload
+   sudo systemctl start marathon.service
+   sudo systemctl enable marathon.service
+
+echo "$(tput setaf 3)!! Installing chronos !!$(tput sgr0)"
    sudo apt-get -y install chronos
-   echo $(tput sgr0) ; fi 
 
-
+fi 
 
 echo "$(tput setaf 6)!! Mesosphere installation has finished. !!$(tput sgr0)"
