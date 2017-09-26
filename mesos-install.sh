@@ -19,7 +19,7 @@ read -p "How many nodes in Mesosphere cluster: " size
 if ! [ $size -eq $size ] 2>/dev/null ; then
    echo "$(tput setaf 1)!! Exit -- Sorry, integer only !!$(tput sgr0)"
    exit ; fi
-if [ -z $new ] || [ $size -lt 1 ] || [ $size -gt 10 ] ; then
+if ! [ $size -gt 1 ] 2>/dev/null || [ $size -gt 10 ] ; then
    echo "$(tput setaf 1)!! Exit -- Please enter cluster size between 1 and 10 !!$(tput sgr0)"
    exit ; fi
    
