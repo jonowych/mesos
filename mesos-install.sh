@@ -1,23 +1,22 @@
 #!/bin/bash
 
 if [ ! "${USER}" = "root" ] ; then
-   echo "!! Enter command as $(tput setaf 1)sudo $0 <arg> !!"
-   echo $(tput sgr0) && exit ; fi
+   echo "!! Please enter command as $(tput setaf 1)sudo $0 $(tput sgr0)!!"
+   echo && exit ; fi
 
 # Get existing IP information
-echo
-read -p "Enter first node number in cluster: " new
+echo && read -p "Enter first node number in cluster: " new
 
 # if ! [ $new -eq $new ] 2>/dev/null ; then
 #    echo "$(tput setaf 1)!! Exit -- Sorry, integer only !!$(tput sgr0)"
 #   exit ; fi
 if [ -z $new ] || [ $new -lt 1 ] || [ $new -gt 254 ] ; then
-   echo "$(tput setaf 1)!! Exit -- node number is out of range !!$(tput sgr0)"
+   echo "$(tput setaf 1)!! Exit -- Please enter node number between 1 and 254 !!$(tput sgr0)"
    exit ; fi
 
 read -p "How many nodes in Mesosphere cluster: " size
-if [ $new -lt 1 ] || [ $new -gt 10 ] ; then
-   echo "$(tput setaf 1)!! Exit -- enter cluster size between 1 and 10 !!$(tput sgr0)"
+if [ $size -lt 1 ] || [ $size -gt 10 ] ; then
+   echo "$(tput setaf 1)!! Exit -- Please enter cluster size between 1 and 10 !!$(tput sgr0)"
    exit ; fi
    
 exit   
