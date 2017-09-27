@@ -87,15 +87,13 @@ done
 # set up mesos-master.service
 cat <<EOF_mesos > /etc/systemd/system/mesos-master.service
 [Unit]
-Description=Mesos Master Service
-After=zookeeper.service
-Requires=zookeeper.service
-
+   Description=Mesos Master Service
+   After=zookeeper.service
+   Requires=zookeeper.service
 [Service]
-ExecStart=/usr/sbin/mesos-master --ip=$newip --hostname=$newip --zk=file:///etc/mesos/zk --quorum=$size --work_dir=/var/lib/mesos
-
+   ExecStart=/usr/sbin/mesos-master --ip=$newip --hostname=$newip --zk=file:///etc/mesos/zk --quorum=$size --work_dir=/var/lib/mesos
 [Install]
-WantedBy=multi-user.target
+   WantedBy=multi-user.target
 EOF_mesos
 
 # Start mesos-master service after configuration set up
@@ -114,15 +112,13 @@ EOF_mesos
 # set up marathon startup service 
 cat <<EOF_marathon > /etc/systemd/system/marathon.service
 [Unit]
-Description=Marathon Service
-After=mesos-master.service
-Requires=mesos-master.service
-
+   Description=Marathon Service
+   After=mesos-master.service
+   Requires=mesos-master.service
 [Service]
-ExecStart=/usr/bin/marathon --master $(cat /etc/mesos/zk) --zk $(cat /etc/mesos/zk | sed 's/mesos/marathon/')
-
+   ExecStart=/usr/bin/marathon --master $(cat /etc/mesos/zk) --zk $(cat /etc/mesos/zk | sed 's/mesos/marathon/')
 [Install]
-WantedBy=multi-user.target
+   WantedBy=multi-user.target
 EOF_marathon
 
 # Start marathod service after configuration set up
@@ -137,15 +133,13 @@ EOF_marathon
 # set up chronos start up service
 cat <<EOF_chronos > /etc/systemd/system/chronos.service
 [Unit]
-Description=Chronos Service
-After=marathon.service
-Requires=marathon.service
-
+   Description=Chronos Service
+   After=marathon.service
+   Requires=marathon.service
 [Service]
-ExecStart=/usr/bin/chronos
-
+   ExecStart=/usr/bin/chronos
 [Install]
-WantedBy=multi-user.target
+   WantedBy=multi-user.target
 EOF_chronos
 
 # Start chronos service after configuration set up
