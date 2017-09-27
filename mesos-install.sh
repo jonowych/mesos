@@ -69,7 +69,7 @@ done
    systemctl enable zookeeper
 
 # (2) Install mesos
-   echo "$(tput setaf 3)!! Installing mesos=$mesos_ver !!$(tput sgr0)"
+   echo "$(tput setaf 3)!! Installing mesos $mesos_ver !!$(tput sgr0)"
    apt-get -y install mesos
    
 # set up /etc/mesos/zk
@@ -111,12 +111,12 @@ EOF_mesos
    systemctl enable mesos-master
 
 # (3) Install marathon
-   echo "$(tput setaf 3)!! Installing marathon=$marathon_ver !!$(tput sgr0)"
+   echo "$(tput setaf 3)!! Installing marathon $marathon_ver !!$(tput sgr0)"
    apt-get -y install marathon
 
 # set up marathon info data
    mkdir -p /etc/marathon/conf
-   cp /etc/mesos-master/hostname /etc/marathon/conf/
+   echo $newip > /etc/marathon/conf/hostname
    cp /etc/mesos/zk /etc/marathon/conf/master
    sed -i 's/mesos/marathon/' /etc/marathon/conf/master
    
