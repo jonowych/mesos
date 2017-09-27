@@ -46,6 +46,11 @@ cat <<EOF_mesos > /etc/systemd/system/mesos-slave.service
    WantedBy=multi-user.target
 EOF_mesos
 
+# Start mesos-slave service after configuration set up
+   systemctl daemon-reload
+   systemctl start mesos-slave.service
+   systemctl enable mesos-slave
+   
 else
    echo "!! Updating Mesosphere $(tput setaf 6)master configuration$(tput sgr0) !!"
    # Update zookeeper ID
@@ -60,11 +65,16 @@ cat <<EOF_mesos > /etc/systemd/system/mesos-master.service
 [Service]
    ExecStart=/usr/sbin/mesos-master --ip=$newip --hostname=$newip \
              --zk=file:///etc/mesos/zk --work_dir=/var/lib/mesos \
-             --quorum=`expr $size/2 + $size%2`
+             --quorum=`expr size/2 + size%2`
 [Install]
    WantedBy=multi-user.target
 EOF_mesos
 
+# Start mesos-master service after configuration set up
+   systemctl daemon-reload
+   systemctl start mesos-master.service
+   systemctl enable mesos-master
+   
 fi
 
 echo Restarting ........
