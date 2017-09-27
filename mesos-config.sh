@@ -30,6 +30,7 @@ first=$(cat /etc/mesos/cluster | awk -F, '(print $1}'
 size=$(cat /etc/mesos/cluster | awk -F, '(print $2}'
 
 if [ $new -lt $first ] || [ $new -gt `expr $first + $size` ] ; then echo "slave" ; fi 
+echo "$first and $size"
 
 echo
 echo "$(tput setaf 6)!! Update $1 node name from $oldhost to $newhost !!"
