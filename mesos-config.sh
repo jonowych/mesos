@@ -1,8 +1,8 @@
 #!/bin/bash
 
 if [ ! "${USER}" = "root" ] ; then
-   echo "!! Enter command as $(tput setaf 1)sudo $0 <arg> !!"
-   echo $(tput sgr0) && exit ; fi
+   echo "!! Enter command as $(tput setaf 1)sudo $0 $(tput sgr0)!!"
+   echo && exit ; fi
 
 if [ -z $(which mesos) ] ; then
    echo "!!$(tput setaf 1) mesos is not installed !!"
