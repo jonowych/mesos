@@ -39,30 +39,25 @@ sed -i "s/$oldhost/$newhost/" /etc/hostname
 sed -i -e "s/$oldhost/$newhost/" -e "s/$oldip/$newip/" /etc/hosts
 sed -i "s/$oldip/$newip/" /etc/network/interfaces
 
-if [ $new -lt $first ] || [ $new -ge `expr $first + $size` ] ; then
-   # update mesos and zookeeper data
-   service zookeeper stop	# slave does not run zookeeper
-   echo manual > /etc/init/zookeeper.override
-   service mesos-master stop
-   echo manual > /etc/init/mesos-master.override
+systemctl stop chronos.service
+systemctl stop marathon.service
+systemctl stop mesos-slave.service
+systemctl stop mesos-master.service
+systemctl stop zookeeper.service
 
-   echo $newip > /etc/mesos-slave/ip
-   echo $newip > /etc/mesos-slave/hostname
+if [ $new -lt $first ] || [ $new -ge `expr $first + $size` ] ; then
+   echo "!! Updating Mesosphere $(tput setaf 6)slave configuration$(tput sgr0) !!"
+   systemctl disable chronos.service
+   systemctl disable marathon.service
+   systemctl disable mesos-master.service
+   systemctl disable zookeeper.service
 
 else
-   # update mesos and zookeeper data
-   service mesos-slave stop
-   echo manual > /etc/init/mesos-slave.override
-
-   echo $new > /etc/zookeeper/conf/myid
-   echo $newip > /etc/mesos-master/ip
-   echo $newip > /etc/mesos-master/hostname
-
-   # update marathon info data
-   mkdir -p /etc/marathon/conf
-   cp /etc/mesos-master/hostname /etc/marathon/conf
-   cp /etc/mesos/zk /etc/marathon/conf/master
-   sed -i 's/mesos/marathon/' /etc/marathon/conf/master
+   echo "!! Updating Mesosphere $(tput setaf 6)master configuration$(tput sgr0) !!"
+   # Update zookeeper ID
+     echo $new > /etc/zookeeper/conf/myid
+   # Update mesos-master.service
+     sed -i "s/$oldip/$newip/g" /etc/systemd/system/mesos-master.service
 fi
 
 echo Restarting ........
