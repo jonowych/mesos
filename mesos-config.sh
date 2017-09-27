@@ -8,17 +8,12 @@ if [ -z $(which mesos) ] ; then
    echo "!!$(tput setaf 1) mesos is not installed $(tput sgr0)!!"
    echo && exit ; fi
 
-# Get exisitng IP address and host name
-intf=$(ifconfig | grep -m1 ^e | awk '{print $1 }')
+# Get existing IP information
+intf=$(ifconfig | grep -m1 ^e | awk '{print $1}')
 oldhost=$(hostname)
-oldip=$(ifconfig | grep $intf -A 1 | grep inet | awk '{ print $2 }' | awk -F: '{ print $2 }')
-
-new=$(echo $new | sed 's/^0*//')
-newhost=$(echo $oldhost | cut -d- -f1)-$new
-newip=$(echo $oldip | cut -d. -f4 --complement).$new
-
-first=$(cat /etc/mesos/cluster | awk -F, '{print $1}')
-size=$(cat /etc/mesos/cluster | awk -F, '{print $2}')
+oldip=$(ifconfig | grep $intf -A 1 | grep inet | awk '{print $2}' | awk -F: '{print $2}')
+new=$(echo $oldip | awk -F. '{print $4}')
+sed -i "s/127.0.1.1/$oldip/" /etc/hosts
 
 echo
 echo "$(tput setaf 6)!! Update $1 node name from $oldhost to $newhost !!"
@@ -26,15 +21,14 @@ echo "!! Update node IP from $oldip to $newip !! $(tput sgr0)"
 echo && echo System will restart in 10 seconds
 sleep 10
 
-sed -i "s/$oldhost/$newhost/" /etc/hostname
-sed -i -e "s/$oldhost/$newhost/" -e "s/$oldip/$newip/" /etc/hosts
-sed -i "s/$oldip/$newip/" /etc/network/interfaces
-
 systemctl stop chronos.service
 systemctl stop marathon.service
 systemctl stop mesos-slave.service
 systemctl stop mesos-master.service
 systemctl stop zookeeper.service
+
+first=$(cat /etc/mesos/cluster | awk -F, '{print $1}')
+size=$(cat /etc/mesos/cluster | awk -F, '{print $2}')
 
 if [ $new -lt $first ] || [ $new -ge `expr $first + $size` ] ; then
    echo "!! Updating Mesosphere $(tput setaf 6)slave configuration$(tput sgr0) !!"
@@ -42,6 +36,23 @@ if [ $new -lt $first ] || [ $new -ge `expr $first + $size` ] ; then
    systemctl disable marathon.service
    systemctl disable mesos-master.service
    systemctl disable zookeeper.service
+
+   apt-get purge -y chronos marathon mesos-master zookeeper
+
+
+[Unit]
+Description=Mesos Slave Service
+
+[Service]
+ExecStart=/usr/local/sbin/mesos-slave --master=zk://192.168.1.30:2181,192.168.1.31:2181,192.168.1.32:2181/mesos --work_dir=/var/lib/mesos
+
+[Install]
+WantedBy=multi-user.target
+
+
+
+
+
 
 else
    echo "!! Updating Mesosphere $(tput setaf 6)master configuration$(tput sgr0) !!"
