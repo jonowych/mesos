@@ -12,7 +12,6 @@ if [ -z $(which mesos) ] ; then
 intf=$(ifconfig | grep -m1 ^e | awk '{print $1}')
 oldhost=$(hostname)
 oldip=$(ifconfig | grep $intf -A 1 | grep inet | awk '{print $2}' | awk -F: '{print $2}')
-new=$(echo $oldip | awk -F. '{print $4}')
 sed -i "s/127.0.1.1/$oldip/" /etc/hosts
 
 echo
@@ -52,7 +51,7 @@ EOF_mesos
 else
    echo "!! Updating Mesosphere $(tput setaf 6)master configuration$(tput sgr0) !!"
    # Update zookeeper ID
-     echo $new > /etc/zookeeper/conf/myid
+     echo $oldip | awk -F. '{print $4}' > /etc/zookeeper/conf/myid
    # Update mesos-master.service
      sed -i "s/$oldip/$newip/g" /etc/systemd/system/mesos-master.service
 fi
