@@ -16,8 +16,7 @@ if [ -z $size ] || [ $size -lt 1 ] || [ $size -gt 10 ] ; then
 intf=$(ifconfig | grep -m1 ^e | awk '{print $1}')
 oldhost=$(hostname)
 oldip=$(ifconfig | grep $intf -A 1 | grep inet | awk '{print $2}' | awk -F: '{print $2}')
-new=$(echo $oldip | awk -F. '{print $4}')
-sed -i "s/127.0.1.1/$oldip/" /etc/hosts
+ID=$(echo $oldip | awk -F. '{print $4}')
 
 # Below are latest versions on 20170927 
 # zookeeper_ver=3.4.8-1
@@ -44,8 +43,8 @@ apt-get -y update
    apt-get -y install zookeeperd
 
 # configure zookeeper ID and connection info in a temporary file
-echo $new > /etc/zookeeper/conf/myid
-for (( k=$new; k<`expr $new + $size`; k++))
+echo $ID > /etc/zookeeper/conf/myid
+for (( k=$ID; k<`expr $ID + $size`; k++))
 do
    newip=$(echo $oldip | cut -d. -f4 --complement).$k
    echo "server.$k=zookeeper$k:2888:3888" >> zoo-temp
@@ -65,14 +64,14 @@ done
    apt-get -y install mesos
    
 # set up /etc/mesos/zk
-echo "$new,$size" > /etc/mesos/cluster
+echo "$ID,$size" > /etc/mesos/cluster
 echo -n "zk://"  > /etc/mesos/zk
-for (( k=$new; k<`expr $new + $size - 1`; k++))
+for (( k=$ID; k<`expr $ID + $size - 1`; k++))
 do
    newip=$(echo $oldip | cut -d. -f4 --complement).$k
    echo -n "$newip:2181," >> /etc/mesos/zk
 done
-   k=`expr $new + $size - 1`
+   k=`expr $ID + $size - 1`
    newip=$(echo $oldip | cut -d. -f4 --complement).$k
    echo "$newip:2181/mesos" >> /etc/mesos/zk
 
@@ -80,9 +79,7 @@ done
    let "size = size/2 +size%2"
 
 # set up mesos-master IP
-   newip=$(echo $oldip | cut -d. -f4 --complement).$new
-#   echo $newip > /etc/mesos-master/ip
-#   echo $newip > /etc/mesos-master/hostname
+   newip=$(echo $oldip | cut -d. -f4 --complement).$ID
 
 # set up mesos-master.service
 cat <<EOF_mesos > /etc/systemd/system/mesos-master.service
