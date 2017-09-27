@@ -12,6 +12,7 @@ if [ -z $(which mesos) ] ; then
 intf=$(ifconfig | grep -m1 ^e | awk '{print $1}')
 oldhost=$(hostname)
 oldip=$(ifconfig | grep $intf -A 1 | grep inet | awk '{print $2}' | awk -F: '{print $2}')
+new=$(echo $oldip | awk -F. '{print $4}')
 sed -i "s/127.0.1.1/$oldip/" /etc/hosts
 
 echo
