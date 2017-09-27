@@ -99,7 +99,7 @@ After=zookeeper.service
 Requires=zookeeper.service
 
 [Service]
-ExecStart=/usr/sbin/mesos-master --ip=$newip --work_dir=/var/lib/mesos --zk=file:///etc/mesos/zk --quorum=$size
+ExecStart=/usr/sbin/mesos-master --ip=$newip --hostname=$newip --zk=file:///etc/mesos/zk --quorum=$size --work_dir=/var/lib/mesos
 
 [Install]
 WantedBy=multi-user.target
@@ -110,11 +110,9 @@ EOF_mesos
    systemctl start mesos-master.service
    systemctl enable mesos-master
 
-exit
-
 # (3) Install marathon
    echo "$(tput setaf 3)!! Installing marathon=$marathon_ver !!$(tput sgr0)"
-   apt-get -y install marathon="$marathon_ver"
+   apt-get -y install marathon
 
 # set up marathon info data
    mkdir -p /etc/marathon/conf
@@ -130,7 +128,7 @@ After=mesos-master.service
 Requires=mesos-master.service
 
 [Service]
-ExecStart=/usr/bin/marathon
+ExecStart=/usr/bin/marathon --master file:///etc/marathon/conf/master --zk=file:///etc/marathon/conf/master
 
 [Install]
 WantedBy=multi-user.target
