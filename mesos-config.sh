@@ -67,5 +67,6 @@ else
    
 fi
 
-echo Restarting ........
+echo VM will restart in 10 seconds ........
+sleep 10
 shutdown -r now
