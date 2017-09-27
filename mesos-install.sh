@@ -33,8 +33,8 @@ oldip=$(ifconfig | grep $intf -A 1 | grep inet | awk '{print $2}' | awk -F: '{pr
 # marathon_ver=1.4.8-1.0.660.ubuntu1604
 # chronos_ver=2.5.0-0.1.20170816233446.ubuntu1604
 # Set up mesos and marathon package version.
-   marathon_ver=1.4.3-1.0.649.ubuntu1604
-   mesos_ver=1.1.1-2.0.1
+#   marathon_ver=1.4.3-1.0.649.ubuntu1604
+#   mesos_ver=1.1.1-2.0.1
 
 # Add GPG key for the official mesosphere repository
 apt-key adv --keyserver keyserver.ubuntu.com --recv E56151BF
@@ -70,8 +70,8 @@ done
 
 # (2) Install mesos
    echo "$(tput setaf 3)!! Installing mesos=$mesos_ver !!$(tput sgr0)"
-   apt-get -y install mesos="$mesos_ver"
-
+   apt-get -y install mesos
+   
 # set up /etc/mesos/zk
 echo -n "zk://"  > /etc/mesos/zk
 for (( k=$new; k<`expr $new + $size - 1`; k++))
@@ -85,12 +85,11 @@ done
 
 # set up quorum (>50% of master members in cluster)
    let "size = size/2 +size%2"
-   echo $size > /etc/mesos-master/quorum
 
 # set up mesos-master IP
    newip=$(echo $oldip | cut -d. -f4 --complement).$new
-   echo $newip > /etc/mesos-master/ip
-   echo $newip > /etc/mesos-master/hostname
+#   echo $newip > /etc/mesos-master/ip
+#   echo $newip > /etc/mesos-master/hostname
 
 # set up mesos-master.service
 cat <<EOF_mesos > /etc/systemd/system/mesos-master.service
@@ -100,7 +99,7 @@ After=zookeeper.service
 Requires=zookeeper.service
 
 [Service]
-ExecStart=/usr/sbin/mesos-master --ip=192.168.119.61 --work_dir=/var/lib/mesos --zk=zk://192.18.119.61:2181,192.168.119.62:2181/mesos --quorum=2  --cluster=billcloud
+ExecStart=/usr/sbin/mesos-master --ip=$newip --work_dir=/var/lib/mesos --zk=file:///etc/mesos/zk --quorum=$size
 
 [Install]
 WantedBy=multi-user.target
