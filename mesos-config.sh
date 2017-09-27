@@ -39,20 +39,15 @@ if [ $new -lt $first ] || [ $new -ge `expr $first + $size` ] ; then
 
    apt-get purge -y chronos marathon mesos-master zookeeper
 
-
+# set up mesos-slave.service
+cat <<EOF_mesos > /etc/systemd/system/mesos-slave.service
 [Unit]
 Description=Mesos Slave Service
-
 [Service]
-ExecStart=/usr/local/sbin/mesos-slave --master=zk://192.168.1.30:2181,192.168.1.31:2181,192.168.1.32:2181/mesos --work_dir=/var/lib/mesos
-
+ExecStart=/usr/sbin/mesos-slave --master=file:///etc/mesos/zk --work_dir=/var/lib/mesos
 [Install]
 WantedBy=multi-user.target
-
-
-
-
-
+EOF_mesos
 
 else
    echo "!! Updating Mesosphere $(tput setaf 6)master configuration$(tput sgr0) !!"
