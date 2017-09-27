@@ -65,7 +65,7 @@ done
    rm zoo-temp
 
 # Start zookeeper service after configuration set up
-   systemctl restart zookeeper
+   systemctl start zookeeper
    systemctl enable zookeeper
 
 # (2) Install mesos
