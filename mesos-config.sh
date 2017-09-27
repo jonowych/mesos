@@ -1,21 +1,12 @@
 #!/bin/bash
 
 if [ ! "${USER}" = "root" ] ; then
-   echo "!! Enter command as $(tput setaf 1)sudo $0 $(tput sgr0)!!"
+   echo "!! Please enter command as $(tput setaf 1)sudo $0 $(tput sgr0)!!"
    echo && exit ; fi
 
 if [ -z $(which mesos) ] ; then
-   echo "!!$(tput setaf 1) mesos is not installed !!"
-   echo $(tput sgr0) && exit ; fi
-
-echo && read -p "Please enter new host node number: " new
-
-if ! [ $new -eq $new ] 2>/dev/null ; then
-        echo -e "$(tput setaf 1)!! Exit -- Sorry, integer only !!$(tput sgr0)"
-        exit 1; fi
-if [ -z $new ] || [ $new -lt 1 ] || [ $new -gt 254 ] ; then
-        echo "$(tput setaf 1)!! Exit -- node number out of range !!$(tput sgr0)"
-        exit 1; fi
+   echo "!!$(tput setaf 1) mesos is not installed $(tput sgr0)!!"
+   echo && exit ; fi
 
 # Get exisitng IP address and host name
 intf=$(ifconfig | grep -m1 ^e | awk '{print $1 }')
