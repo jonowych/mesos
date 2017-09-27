@@ -117,8 +117,6 @@ EOF_mesos
 # set up marathon info data
    mkdir -p /etc/marathon/conf
    echo $newip > /etc/marathon/conf/hostname
-   cp /etc/mesos/zk /etc/marathon/conf/master
-   sed -i 's/mesos/marathon/' /etc/marathon/conf/master
    
 # set up marathon startup service 
 cat <<EOF_marathon > /etc/systemd/system/marathon.service
@@ -128,7 +126,7 @@ After=mesos-master.service
 Requires=mesos-master.service
 
 [Service]
-ExecStart=/usr/bin/marathon --master $(cat /etc/mesos/zk) --zk file:///etc/marathon/conf/master
+ExecStart=/usr/bin/marathon --master $(cat /etc/mesos/zk) --zk $(cat /etc/mesos/zk | sed 's/mesos/marathon/')
 
 [Install]
 WantedBy=multi-user.target
