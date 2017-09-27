@@ -4,15 +4,6 @@ if [ ! "${USER}" = "root" ] ; then
    echo "!! Please enter command as $(tput setaf 1)sudo $0 $(tput sgr0)!!"
    echo && exit ; fi
 
-# Get existing IP information
-echo && read -p "Enter first node number in cluster: " new
-if ! [ $new -eq $new ] 2>/dev/null ; then
-   echo "$(tput setaf 1)!! Exit -- Sorry, integer only !!$(tput sgr0)"
-   exit ; fi
-if [ -z $new ] || [ $new -lt 1 ] || [ $new -gt 254 ] ; then
-   echo "$(tput setaf 1)!! Exit -- Please enter node number between 1 and 254 !!$(tput sgr0)"
-   exit ; fi
-
 read -p "How many nodes in Mesosphere cluster: " size
 if ! [ $size -eq $size ] 2>/dev/null ; then
    echo "$(tput setaf 1)!! Exit -- Sorry, integer only !!$(tput sgr0)"
@@ -20,12 +11,16 @@ if ! [ $size -eq $size ] 2>/dev/null ; then
 if [ -z $size ] || [ $size -lt 1 ] || [ $size -gt 10 ] ; then
    echo "$(tput setaf 1)!! Exit -- Please enter cluster size between 1 and 10 !!$(tput sgr0)"
    exit ; fi
-   
-new=$(echo $new | sed 's/^0*//')
-intf=$(ifconfig | grep -m1 ^e | awk '{print $1}')
 
+# Get existing IP information
+intf=$(ifconfig | grep -m1 ^e | awk '{print $1}')
 oldhost=$(hostname)
 oldip=$(ifconfig | grep $intf -A 1 | grep inet | awk '{print $2}' | awk -F: '{print $2}')
+new=$(echo $oldip | awk -F. '{print $4}')
+sed -i "/127.0.1.1/$oldip/" /etc/hosts
+
+echo $new
+exit
 
 # Below are latest versions on 20170927 
 # zookeeper_ver=3.4.8-1
