@@ -26,8 +26,8 @@ new=$(echo $new | sed 's/^0*//')
 newhost=$(echo $oldhost | cut -d- -f1)-$new
 newip=$(echo $oldip | cut -d. -f4 --complement).$new
 
-first=$(cat /etc/mesos/cluster | awk -F, '{print $1}'
-size=$(cat /etc/mesos/cluster | awk -F, '{print $2}'
+first=$(cat /etc/mesos/cluster) | awk -F, '{print $1}'
+size=$(cat /etc/mesos/cluster) | awk -F, '{print $2}'
 
 if [ $new -lt $first ] || [ $new -gt `expr $first + $size` ] ; then echo "slave" ; fi 
 echo "$first and $size"
