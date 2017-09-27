@@ -128,7 +128,7 @@ After=mesos-master.service
 Requires=mesos-master.service
 
 [Service]
-ExecStart=/usr/bin/marathon --master file:///etc/marathon/conf/master --zk=file:///etc/marathon/conf/master
+ExecStart=/usr/bin/marathon --master $(cat /etc/mesos/zk) --zk file:///etc/marathon/conf/master
 
 [Install]
 WantedBy=multi-user.target
