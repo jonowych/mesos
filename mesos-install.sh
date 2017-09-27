@@ -100,7 +100,7 @@ After=zookeeper.service
 Requires=zookeeper.service
 
 [Service]
-ExecStart=/usr/sbin/mesos-master
+ExecStart=/usr/sbin/mesos-master --ip=192.168.119.61 --work_dir=/var/lib/mesos --zk=zk://192.18.119.61:2181,192.168.119.62:2181/mesos --quorum=2  --cluster=billcloud
 
 [Install]
 WantedBy=multi-user.target
