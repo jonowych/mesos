@@ -29,22 +29,17 @@ newip=$(echo $oldip | cut -d. -f4 --complement).$new
 first=$(cat /etc/mesos/cluster | awk -F, '{print $1}')
 size=$(cat /etc/mesos/cluster | awk -F, '{print $2}')
 
-if [ $new -lt $first ] || [ $new -gt `expr $first + $size` ] ; then echo "slave" ; fi 
-echo "$first and $size"
-
 echo
 echo "$(tput setaf 6)!! Update $1 node name from $oldhost to $newhost !!"
 echo "!! Update node IP from $oldip to $newip !! $(tput sgr0)"
 echo && echo System will restart in 10 seconds
-
-exit
 sleep 10
 
 sed -i "s/$oldhost/$newhost/" /etc/hostname
 sed -i -e "s/$oldhost/$newhost/" -e "s/$oldip/$newip/" /etc/hosts
 sed -i "s/$oldip/$newip/" /etc/network/interfaces
 
-if [ $new -lt $first ] || [ $new -gt `expr $first + $size` ] ; then
+if [ $new -lt $first ] || [ $new -ge `expr $first + $size` ] ; then
    # update mesos and zookeeper data
    service zookeeper stop	# slave does not run zookeeper
    echo manual > /etc/init/zookeeper.override
