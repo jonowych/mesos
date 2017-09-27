@@ -52,9 +52,22 @@ EOF_mesos
 else
    echo "!! Updating Mesosphere $(tput setaf 6)master configuration$(tput sgr0) !!"
    # Update zookeeper ID
-     echo $oldip | awk -F. '{print $4}' > /etc/zookeeper/conf/myid
-   # Update mesos-master.service
-     sed -i "s/$oldip/$newip/g" /etc/systemd/system/mesos-master.service
+     echo $new > /etc/zookeeper/conf/myid
+   
+# set up mesos-master.service
+cat <<EOF_mesos > /etc/systemd/system/mesos-master.service
+[Unit]
+Description=Mesos Master Service
+After=zookeeper.service
+Requires=zookeeper.service
+[Service]
+ExecStart=/usr/sbin/mesos-master --ip=$newip --hostname=$newip \
+          --zk=file:///etc/mesos/zk --work_dir=/var/lib/mesos \
+          --quorum=`expr $size/2 + $size%2`
+[Install]
+WantedBy=multi-user.target
+EOF_mesos
+
 fi
 
 echo Restarting ........
