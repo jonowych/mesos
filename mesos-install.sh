@@ -6,7 +6,6 @@ if [ ! "${USER}" = "root" ] ; then
 
 # Get existing IP information
 echo && read -p "Enter first node number in cluster: " new
-
 if ! [ $new -eq $new ] 2>/dev/null ; then
    echo "$(tput setaf 1)!! Exit -- Sorry, integer only !!$(tput sgr0)"
    exit ; fi
@@ -15,7 +14,6 @@ if [ -z $new ] || [ $new -lt 1 ] || [ $new -gt 254 ] ; then
    exit ; fi
 
 read -p "How many nodes in Mesosphere cluster: " size
-
 if ! [ $size -eq $size ] 2>/dev/null ; then
    echo "$(tput setaf 1)!! Exit -- Sorry, integer only !!$(tput sgr0)"
    exit ; fi
@@ -23,15 +21,13 @@ if [ -z $size ] || [ $size -lt 1 ] || [ $size -gt 10 ] ; then
    echo "$(tput setaf 1)!! Exit -- Please enter cluster size between 1 and 10 !!$(tput sgr0)"
    exit ; fi
    
-exit   
-   
 new=$(echo $new | sed 's/^0*//')
-intf=$(ifconfig | grep -m1 ^e | awk '{print $1 }')
+intf=$(ifconfig | grep -m1 ^e | awk '{print $1}')
 
 oldhost=$(hostname)
-oldip=$(ifconfig | grep $intf -A 1 | grep inet | awk '{ print $2 }' | awk -F: '{ print $2 }')
+oldip=$(ifconfig | grep $intf -A 1 | grep inet | awk '{print $2}' | awk -F: '{print $2}')
 
-# Begin with "#" are latest version 
+# Below are latest versions on 20170927 
 # zookeeper_ver=3.4.8-1
 # mesos_ver=1.3.1-2.0.1
 # marathon_ver=1.4.8-1.0.660.ubuntu1604
@@ -51,11 +47,6 @@ CODENAME=$(lsb_release -cs)
 echo "deb http://repos.mesosphere.com/${DISTRO} ${CODENAME} main" | sudo tee /etc/apt/sources.list.d/mesosphere.list
 apt-get -y update
 
-# Although mesos includes zookeeper, it requires downgraded versions of libevent-dev & libssl-dev.
-# Those downgraded packages will break zookeeper daeman as "active (exited)".
-# 
-# Install zookeeperd before mesos to work around the problem.
-
 # (1) Install zookeeper
    echo "$(tput setaf 3)!! Installing zookeeper !!$(tput sgr0)"
    apt-get -y install zookeeperd
@@ -74,7 +65,7 @@ done
    rm zoo-temp
 
 # Start zookeeper service after configuration set up
-   systemctl start zookeeper
+   systemctl restart zookeeper
    systemctl enable zookeeper
 
 # (2) Install mesos
@@ -119,6 +110,8 @@ EOF_mesos
    systemctl daemon-reload
    systemctl start mesos-master.service
    systemctl enable mesos-master
+
+exit
 
 # (3) Install marathon
    echo "$(tput setaf 3)!! Installing marathon=$marathon_ver !!$(tput sgr0)"
