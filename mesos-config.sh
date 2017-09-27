@@ -42,11 +42,11 @@ if [ $new -lt $first ] || [ $new -ge `expr $first + $size` ] ; then
 # set up mesos-slave.service
 cat <<EOF_mesos > /etc/systemd/system/mesos-slave.service
 [Unit]
-Description=Mesos Slave Service
+   Description=Mesos Slave Service
 [Service]
-ExecStart=/usr/sbin/mesos-slave --master=file:///etc/mesos/zk --work_dir=/var/lib/mesos
+   ExecStart=/usr/sbin/mesos-slave --master=file:///etc/mesos/zk --work_dir=/var/lib/mesos
 [Install]
-WantedBy=multi-user.target
+   WantedBy=multi-user.target
 EOF_mesos
 
 else
@@ -57,15 +57,15 @@ else
 # set up mesos-master.service
 cat <<EOF_mesos > /etc/systemd/system/mesos-master.service
 [Unit]
-Description=Mesos Master Service
-After=zookeeper.service
-Requires=zookeeper.service
+   Description=Mesos Master Service
+   After=zookeeper.service
+   Requires=zookeeper.service
 [Service]
-ExecStart=/usr/sbin/mesos-master --ip=$newip --hostname=$newip \
-          --zk=file:///etc/mesos/zk --work_dir=/var/lib/mesos \
-          --quorum=`expr $size/2 + $size%2`
+   ExecStart=/usr/sbin/mesos-master --ip=$newip --hostname=$newip \
+             --zk=file:///etc/mesos/zk --work_dir=/var/lib/mesos \
+             --quorum=`expr $size/2 + $size%2`
 [Install]
-WantedBy=multi-user.target
+   WantedBy=multi-user.target
 EOF_mesos
 
 fi
