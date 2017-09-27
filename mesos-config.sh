@@ -38,7 +38,11 @@ if [ $new -lt $first ] || [ $new -ge `expr $first + $size` ] ; then
    systemctl disable zookeeper.service
 
    apt-get purge -y chronos marathon mesos-master zookeeper
-
+   rm /etc/systemd/system/chronos.service
+   rm /etc/systemd/system/marathon.service
+   rm /etc/systemd/system/mesos-master.service
+   rm /etc/systemd/system/zookeeper.service
+   
 # set up mesos-slave.service
 cat <<EOF_mesos > /etc/systemd/system/mesos-slave.service
 [Unit]
