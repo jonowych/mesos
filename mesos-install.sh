@@ -65,7 +65,7 @@ done
    apt-get -y install mesos
    
 # set up /etc/mesos/zk
-echo -e $new\t$size > /etc/mesos/cluster
+echo "$new,$size" > /etc/mesos/cluster
 echo -n "zk://"  > /etc/mesos/zk
 for (( k=$new; k<`expr $new + $size - 1`; k++))
 do
