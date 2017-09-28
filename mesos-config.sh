@@ -62,7 +62,7 @@ if [ -e mesos-master.service ] ; then
 		sed -i -e '/.2888.3888/d' -e "$k r /tmp/zookeeper.txt" /etc/zookeeper/conf/zoo.cfg
 
 		# (3) Update mesos-master.service
-		newip=$(echo $oldip | cut -d. -f4 --complement).$ID
+		newip=$(echo $oldip | cut -d. -f4 --complement).$sysnode
 		echo -n "ExecStart=/usr/sbin/mesos-master " > /tmp/mesos.txt
 		echo -n "--ip=$newip --hostname=$newip --zk=$(cat /etc/mesos/zk) " >> /tmp/mesos.txt
 		echo -n "--quorum=`expr $size/2 + $size%2` --work_dir=/var/lib/mesos" >> /tmp/mesos.txt
@@ -97,6 +97,18 @@ else
 		echo "$(tput setaf 3)!! Installing mesos on slave machine !!$(tput sgr0)"
 		apt-get -y update
 		apt-get -y install mesos
+
+		# set up mesos-slave.service
+cat <<EOF_mesos > /etc/systemd/system/mesos-slave.service
+		[Unit]
+		Description=Mesos Slave Service
+
+		[Service]
+		ExecStart=/usr/sbin/mesos-slave --master=$(cat /tmp/zk) --work_dir=/var/lib/mesos
+
+		[Install]
+		WantedBy=multi-user.target
+EOF_mesos
 
 		# Start mesos-slave service after configuration set up
 		systemctl daemon-reload
