@@ -64,7 +64,6 @@ done
    apt-get -y install mesos
    
 # set up /etc/mesos/zk
-echo "$ID,$size" > /etc/mesos/cluster
 echo -n "zk://"  > /etc/mesos/zk
 for (( k=$ID; k<`expr $ID + $size - 1`; k++))
 do
@@ -76,7 +75,7 @@ done
    echo "$newip:2181/mesos" >> /etc/mesos/zk
 
 # set up quorum (>50% of master members in cluster)
-   let "size = size/2 +size%2"
+   let "k = size/2 +size%2"
 
 # set up mesos-master IP
    newip=$(echo $oldip | cut -d. -f4 --complement).$ID
@@ -87,8 +86,10 @@ cat <<EOF_mesos > /etc/systemd/system/mesos-master.service
    Description=Mesos Master Service
    After=zookeeper.service
    Requires=zookeeper.service
+
 [Service]
-   ExecStart=/usr/sbin/mesos-master --ip=$newip --hostname=$newip --zk=file:///etc/mesos/zk --quorum=$size --work_dir=/var/lib/mesos
+   ExecStart=/usr/sbin/mesos-master --ip=$newip --hostname=$newip --zk=$(cat /etc/mesos/zk) --quorum=$k --work_dir=/var/lib/mesos
+
 [Install]
    WantedBy=multi-user.target
 EOF_mesos
@@ -112,8 +113,10 @@ cat <<EOF_marathon > /etc/systemd/system/marathon.service
    Description=Marathon Service
    After=mesos-master.service
    Requires=mesos-master.service
+
 [Service]
    ExecStart=/usr/bin/marathon --master $(cat /etc/mesos/zk) --zk $(cat /etc/mesos/zk | sed 's/mesos/marathon/')
+
 [Install]
    WantedBy=multi-user.target
 EOF_marathon
@@ -133,8 +136,10 @@ cat <<EOF_chronos > /etc/systemd/system/chronos.service
    Description=Chronos Service
    After=marathon.service
    Requires=marathon.service
+
 [Service]
    ExecStart=/usr/bin/chronos
+
 [Install]
    WantedBy=multi-user.target
 EOF_chronos
@@ -149,6 +154,6 @@ echo $(tput setaf 6)
 echo "!! Mesosphere installation has finished. !!"
 echo $(tput sgr0)
 
-echo VM will restart in 10 seconds ........
+echo Master node will restart in 10 seconds ........
 sleep 10
 shutdown -r now
