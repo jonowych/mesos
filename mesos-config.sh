@@ -13,7 +13,7 @@ ID=$(echo $oldip | awk -F. '{print $4}')
 # Update mesos service file
 cd /etc/systemd/system/
 if [ -e mesos-master.service ] ; then
-   echo "!! Updating Mesosphere $(tput setaf 6)master configuration$(tput sgr0) !!"
+   echo "!! Updating Mesosphere $(tput setaf 6)master configuration $(tput sgr0)!!"
    # Update zookeeper ID
      echo $ID > /etc/zookeeper/conf/myid
 
@@ -25,7 +25,7 @@ if [ -e mesos-master.service ] ; then
      systemctl daemon-reload
      systemctl start mesos-master.service
      systemctl enable mesos-master
-
+    echo "!!$(tput setaf 6)Mesosphere master configuration has been updated $(tput sgr0)!!"
 else
    if [ ! -e mesos-slave.service ] ; then
    # Download /etc/mesos/zk from master node
@@ -64,10 +64,7 @@ EOF_mesos
      systemctl daemon-reload
      systemctl start mesos-slave.service
      systemctl enable mesos-slave
+     echo "$(tput setaf 3)!! Mesos-slave has been installed in node !!$(tput sgr0)"
    fi
 fi
-
-echo VM will restart in 10 seconds ........
-sleep 10
-exit
-shutdown -r now
+echo && echo "$(tput setaf 6)!! Mesosphere configuration has changed. Please restart VM if required !!$(tput sgr0)"
