@@ -33,7 +33,7 @@ else
      echo && read -p "Please enter master node number: " master
      masterip=$(echo $oldip | cut -d. -f4 --complement).$master
      ping -q -c3 $masterip > /dev/null
-     if [ $? -ne 0 ] ; then echo "No response from node $masterip" && exit
+     if [ $? -ne 0 ] ; then echo "$(tput setaf 1)!! No response from node $masterip !!$(tput sgr0)" && exit
      else scp sydadmin@$masterip:/etc/mesos/zk /tmp/ ; fi
 
      echo "$(tput setaf 3)!! Installing mesos on slave machine !!$(tput sgr0)"
