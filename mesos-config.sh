@@ -67,4 +67,6 @@ EOF_mesos
      echo "$(tput setaf 3)!! Mesos-slave has been installed in node !!$(tput sgr0)"
    fi
 fi
-echo && echo "$(tput setaf 6)!! Mesosphere configuration has changed. Please restart VM if required !!$(tput sgr0)"
+echo && echo Master node will restart in 10 seconds ........
+sleep 10
+shutdown -r now
