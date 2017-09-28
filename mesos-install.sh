@@ -4,7 +4,7 @@ if [ ! "${USER}" = "root" ] ; then
    echo "!! Please enter command as $(tput setaf 1)sudo $0 $(tput sgr0)!!"
    echo && exit ; fi
 
-read -p "How many nodes in Mesosphere cluster: " size
+read -p "How many master nodes in Mesosphere cluster: " size
 if ! [ $size -eq $size ] 2>/dev/null ; then
    echo "$(tput setaf 1)!! Exit -- Sorry, integer only !!$(tput sgr0)"
    exit ; fi
