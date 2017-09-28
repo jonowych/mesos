@@ -10,6 +10,15 @@ oldhost=$(hostname)
 oldip=$(ifconfig | grep $intf -A 1 | grep inet | awk '{print $2}' | awk -F: '{print $2}')
 ID=$(echo $oldip | awk -F. '{print $4}')
 
+read -p "How many nodes in cluster? (Press [enter] for no change): " size
+if ! [ $size -eq $size ] 2>/dev/null ; then
+   echo "$(tput setaf 1)!! Exit -- Sorry, integer only !!$(tput sgr0)"
+   exit ; fi
+if [ $size -lt 1 ] || [ $size -gt 10 ] ; then
+   echo "$(tput setaf 1)!! Exit -- Please enter cluster size between 1 and 10 !!$(tput sgr0)"
+   exit ; fi
+
+if [ -z $size ] ; then
 # Update mesos service file
 cd /etc/systemd/system/
 if [ -e mesos-master.service ] ; then
@@ -67,6 +76,52 @@ EOF_mesos
      echo "$(tput setaf 3)!! Mesos-slave has been installed in node !!$(tput sgr0)"
    fi
 fi
+
+else 
+# ---- this section update the cluster size if size input is non-size ---
+# (1) Update /etc/mesos/zk
+echo -n "zk://"  > /etc/mesos/zk
+for (( k=$ID; k<`expr $ID + $size - 1`; k++))
+do
+   newip=$(echo $oldip | cut -d. -f4 --complement).$k
+   echo -n "$newip:2181," >> /etc/mesos/zk
+done
+   k=`expr $ID + $size - 1`
+   newip=$(echo $oldip | cut -d. -f4 --complement).$k
+   echo "$newip:2181/mesos" >> /etc/mesos/zk
+
+# (2) Update zookeeper configuration
+echo $ID > /etc/zookeeper/conf/myid
+
+echo -n > /tmp/zookeeper.txt
+for (( k=$ID; k<`expr $ID + $size`; k++))
+do
+   newip=$(echo $oldip | cut -d. -f4 --complement).$k
+   echo "server.$k=zookeeper$k:2888:3888" >> /tmp/zookeeper.txt
+done
+
+# import zookeeper connection info to system config files.
+   k=`expr $(awk '/.2888.3888/{print NR;exit}' /etc/zookeeper/conf/zoo.cfg) - 1`
+   sed -i -e '/.2888.3888/d' -e "$k r /tmp/zookeeper.txt" /etc/zookeeper/conf/zoo.cfg
+
+# (3) Update mesos-master.service
+
+   newip=$(echo $oldip | cut -d. -f4 --complement).$ID
+   echo -n "ExecStart=/usr/sbin/mesos-master " > /tmp/mesos.txt
+   echo -n "--ip=$newip --hostname=$newip --zk=$(cat /etc/mesos/zk) " >> /tmp/mesos.txt
+   echo -n "--quorum=`expr $size/2 + $size%2` --work_dir=/var/lib/mesos" >> /tmp/mesos.txt
+
+   k=`expr $(awk '/ExecStart/{print NR;exit}' mesos-master.service) - 1`
+   sed -i -e '/ExecStart/d' -e "$k r /tmp/mesos.txt" mesos-master.service
+
+# (4) Update marathon.service
+   echo -n "ExecStart=/usr/sbin/marathon --master $(cat /etc/mesos/zk) " > /tmp/marathon.txt
+   echo -n "--zk $(cat /etc/mesos/zk | sed 's/mesos/marathon/')" >> /tmp/marathon.txt
+
+   k=`expr $(awk '/ExecStart/{print NR;exit}' marathon.service) - 1`
+   sed -i -e '/ExecStart/d' -e "$k r /tmp/marathon.txt" marathon.service
+fi
+
 echo && echo Master node will restart in 10 seconds ........
 sleep 10
 shutdown -r now
