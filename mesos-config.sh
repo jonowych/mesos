@@ -98,18 +98,6 @@ else
 		apt-get -y update
 		apt-get -y install mesos
 
-		# set up mesos-slave.service
-		cat <<EOF_mesos > /etc/systemd/system/mesos-slave.service
-		[Unit]
-		Description=Mesos Slave Service
-
-		[Service]
-		ExecStart=/usr/sbin/mesos-slave --master=$(cat /tmp/zk) --work_dir=/var/lib/mesos
-
-		[Install]
-		WantedBy=multi-user.target
-		EOF_mesos
-
 		# Start mesos-slave service after configuration set up
 		systemctl daemon-reload
 		systemctl start mesos-slave.service
