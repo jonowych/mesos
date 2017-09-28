@@ -28,8 +28,7 @@ if [ -e mesos-master.service ] ; then
 
 else
    if [ ! -e mesos-slave.service ] ; then
-   echo "$(tput setaf 3)!! Installing mesos on slave machine !!$(tput sgr0)"
-
+ 
    # Download /etc/mesos/zk from master node
      read -p "Please enter master node number: " master
      masterip=$(echo $oldip | cut -d. -f4 --complement).$master
@@ -37,7 +36,8 @@ else
      if [ $? -ne 0 ] ; then echo "No response from node $masterip" && exit
      else scp sydadmin@$masterip:/etc/mesos/zk /tmp/ ; fi
 
-   # apt-get -y install mesos
+     echo "$(tput setaf 3)!! Installing mesos on slave machine !!$(tput sgr0)"
+     apt-get -y install mesos
 
 # set up mesos-slave.service
 cat <<EOF_mesos > /etc/systemd/system/mesos-slave.service
