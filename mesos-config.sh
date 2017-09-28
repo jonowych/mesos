@@ -2,7 +2,8 @@
 
 if [ ! "${USER}" = "root" ] ; then
 	echo "!! Please enter command as $(tput setaf 1)sudo $0 $(tput sgr0)!!"
-	echo && exit ; fi
+	echo && exit
+fi
 
 # Add GPG key for the official mesosphere repository
 apt-key adv --keyserver keyserver.ubuntu.com --recv E56151BF
@@ -17,11 +18,12 @@ apt-get -y update
 
 read -p "How many master nodes in cluster? (Press [enter] for no change): " size
 if ! [ $size -eq $size ] 2>/dev/null ; then
-	echo "$(tput setaf 1)!! Exit -- Sorry, integer only !!$(tput sgr0)"
-	exit ; fi
+	echo "$(tput setaf 1)!! Exit -- Sorry, integer only !!$(tput sgr0)" && exit
+fi
+
 if [ $size -lt 1 ] || [ $size -gt 10 ] ; then
-	echo "$(tput setaf 1)!! Exit -- Please enter cluster size between 1 and 10 !!$(tput sgr0)"
-	exit ; fi
+	echo "$(tput setaf 1)!! Exit -- Please enter cluster size between 1 and 10 !!$(tput sgr0)" && exit
+fi
 
 # Get system IP information
 intf=$(ifconfig | grep -m1 ^e | awk '{print $1}')
