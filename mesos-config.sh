@@ -14,7 +14,6 @@ DISTRO=$(lsb_release -is | tr '[:upper:]' '[:lower:]')
 # Add repository according linux distro
 CODENAME=$(lsb_release -cs)
 echo "deb http://repos.mesosphere.com/${DISTRO} ${CODENAME} main" | sudo tee /etc/apt/sources.list.d/mesosphere.list
-apt-get -y update
 
 read -p "How many master nodes in cluster? (Press [enter] for no change): " size
 if ! [ $size -eq $size ] 2>/dev/null ; then
@@ -96,6 +95,7 @@ else
 		fi
 
 		echo "$(tput setaf 3)!! Installing mesos on slave machine !!$(tput sgr0)"
+		apt-get -y update
 		apt-get -y install mesos
 
 		# set up mesos-slave.service
