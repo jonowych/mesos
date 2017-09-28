@@ -55,6 +55,7 @@ EOF_mesos
      systemctl daemon-reload
      systemctl start mesos-slave.service
      systemctl enable mesos-slave
+   fi
 fi
 
 echo VM will restart in 10 seconds ........
