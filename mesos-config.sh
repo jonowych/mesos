@@ -99,7 +99,7 @@ else
 		apt-get -y install mesos
 
 		# set up mesos-slave.service
-		cat << EOF_mesos > /etc/systemd/system/mesos-slave.service
+		cat <<EOF_mesos > /etc/systemd/system/mesos-slave.service
 		[Unit]
 		Description=Mesos Slave Service
 
