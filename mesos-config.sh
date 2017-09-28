@@ -30,7 +30,7 @@ else
    if [ ! -e mesos-slave.service ] ; then
  
    # Download /etc/mesos/zk from master node
-     read -p "Please enter master node number: " master
+     echo && read -p "Please enter master node number: " master
      masterip=$(echo $oldip | cut -d. -f4 --complement).$master
      ping -q -c3 $masterip > /dev/null
      if [ $? -ne 0 ] ; then echo "No response from node $masterip" && exit
