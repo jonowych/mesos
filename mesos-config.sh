@@ -19,7 +19,7 @@ if [ -e mesos-master.service ] ; then
 
    # update mesos-master.service
      mesosip=$(cat mesos-master.service | grep ExecStart | awk -F= '{print $3}' | awk '{print $1}')
-     sed "s/$mesosip/$oldip/" mesos-master.service
+     sed "s/$mesosip/$oldip/g" mesos-master.service
 
    # Start mesos-master service after configuration set up
      systemctl daemon-reload
