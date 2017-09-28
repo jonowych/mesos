@@ -28,7 +28,6 @@ if [ -e mesos-master.service ] ; then
 
 else
    if [ ! -e mesos-slave.service ] ; then
- 
    # Download /etc/mesos/zk from master node
      echo && read -p "Please enter master node number: " master
      masterip=$(echo $oldip | cut -d. -f4 --complement).$master
@@ -37,7 +36,17 @@ else
      else scp sydadmin@$masterip:/etc/mesos/zk /tmp/ ; fi
 
      echo "$(tput setaf 3)!! Installing mesos on slave machine !!$(tput sgr0)"
-     apt-get -y install mesos
+     # Add GPG key for the official mesosphere repository
+       apt-key adv --keyserver keyserver.ubuntu.com --recv E56151BF
+
+     # Add mesosphere repository to APT sources
+       DISTRO=$(lsb_release -is | tr '[:upper:]' '[:lower:]')
+
+     # Add repository according linux distro
+       CODENAME=$(lsb_release -cs)
+       echo "deb http://repos.mesosphere.com/${DISTRO} ${CODENAME} main" | sudo tee /etc/apt/sources.list.d/mesosphere.list
+       apt-get -y update
+       apt-get -y install mesos
 
 # set up mesos-slave.service
 cat <<EOF_mesos > /etc/systemd/system/mesos-slave.service
