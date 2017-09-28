@@ -62,9 +62,10 @@ if [ -e mesos-master.service ] ; then
 		sed -i -e '/.2888.3888/d' -e "$k r /tmp/zookeeper.txt" /etc/zookeeper/conf/zoo.cfg
 
 		# (3) Update mesos-master.service
+		let `k=size/2 + size%2`
 		echo -n "ExecStart=/usr/sbin/mesos-master " > /tmp/mesos.txt
 		echo -n "--ip=$sysip --hostname=$sysip --zk=$(cat /etc/mesos/zk) " >> /tmp/mesos.txt
-		echo -n "--quorum=`expr $size/2 + $size%2` --work_dir=/var/lib/mesos" >> /tmp/mesos.txt
+		echo -n "--quorum=$k --work_dir=/var/lib/mesos" >> /tmp/mesos.txt
 
 		k=`expr $(awk '/ExecStart/{print NR;exit}' mesos-master.service) - 1`
  		sed -i -e '/ExecStart/d' -e "$k r /tmp/mesos.txt" mesos-master.service
