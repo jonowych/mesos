@@ -18,10 +18,12 @@ if [ $size -lt 1 ] || [ $size -gt 10 ] ; then
    echo "$(tput setaf 1)!! Exit -- Please enter cluster size between 1 and 10 !!$(tput sgr0)"
    exit ; fi
 
-if [ -z $size ] ; then
-# Update mesos service file
 cd /etc/systemd/system/
+if [ -z $size ] ; then
+# --- size is entered zero (no change), update mesos-master or mesos-slave service file --- 
+
 if [ -e mesos-master.service ] ; then
+# --- update mesos master node if mesos-master.service exists --- 
    echo "!! Updating Mesosphere $(tput setaf 6)master configuration $(tput sgr0)!!"
    # Update zookeeper ID
      echo $ID > /etc/zookeeper/conf/myid
@@ -36,7 +38,10 @@ if [ -e mesos-master.service ] ; then
      systemctl enable mesos-master
     echo "!!$(tput setaf 6)Mesosphere master configuration has been updated $(tput sgr0)!!"
 else
+# --- update mesos slave node if mesos-master.service does not exist --- 
    if [ ! -e mesos-slave.service ] ; then
+   # --- Install mesos package if mesos-slave.service does not exist ---
+   
    # Download /etc/mesos/zk from master node
      echo && read -p "Please enter master node number: " master
      masterip=$(echo $oldip | cut -d. -f4 --complement).$master
