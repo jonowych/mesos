@@ -4,7 +4,7 @@ if [ ! "${USER}" = "root" ] ; then
 	echo "!! Please enter command as $(tput setaf 1)sudo $0 $(tput sgr0)!!"
 	echo && exit ; fi
 
-read -p "How many master nodes in cluster? (Press [enter] for no change): " size
+read -p "How many master nodes in cluster, [enter] for no change: " size
 
 if ! [ $size -eq $size ] 2>/dev/null ; then
 	echo -n $(tput setaf 1)
@@ -153,7 +153,7 @@ echo && exit
 #############
 	1new)
 echo "$(tput setaf 6)!! This is new node !!$(tput sgr0)"
-echo "Please press [enter] in cluster size to install mesos-slave package."
+echo "Please [enter] in cluster size to install mesos-slave package."
 echo && exit  
 
 #############
