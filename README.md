@@ -6,7 +6,7 @@ Run scripts in following order
 4) ~/uDocker/host-update.sh       # update IP address & hostname
 5) git clone [mesos]
 6) sudo ~/mesos/mesos-install.sh  # install zookeeper, mesos, marathon & chronos
-      Remark: IP address of this VM becomes first member of mesosphere cluster 
+      - Remark: IP address of this VM becomes first member of mesosphere cluster 
 7) sudo ~/mesos/mesos-config.sh   # install mesos-slave packages in fresh VM  
 8) Clone master or slave VM to more VMs
 9) sudo ~/uDocker/host-update.sh  # update IP address & hostname
