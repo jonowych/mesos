@@ -45,7 +45,7 @@ echo "Update mesos-master.service with system IP."
 	zooip=$(echo $sysip | cut -d. -f4 --complement).$zoonode
 	echo $sysnode > /etc/zookeeper/conf/myid
 # Update mesos-master.service
-	sed -i "s|=$zooip|$sysip|g" mesos-master.service
+	sed -i "s|=$zooip|=$sysip|g" mesos-master.service
 ;;
 
 0s)
@@ -84,13 +84,13 @@ echo "$(tput setaf 6)!! This is new node !!$(tput sgr0)"
 # set up mesos-slave.service
 cat <<EOF_mesos > /etc/systemd/system/mesos-slave.service
 [Unit]
-Description=Mesos Slave Service
+   Description=Mesos Slave Service
 
 [Service]
-ExecStart=/usr/sbin/mesos-slave --master=$(cat /tmp/zk) --work_dir=/var/lib/mesos
+   ExecStart=/usr/sbin/mesos-slave --master=$(cat /tmp/zk) --work_dir=/var/lib/mesos
 
 [Install]
-WantedBy=multi-user.target
+   WantedBy=multi-user.target
 
 EOF_mesos
 
@@ -129,16 +129,16 @@ echo "Update mesos-master.service and cluster configuration."
 
 # update mesos-master.service
 	let "k = size/2 + size%2"
-	echo -n "ExecStart=/usr/sbin/mesos-master " > /tmp/mesos.txt
+	echo -n "   ExecStart=/usr/sbin/mesos-master " > /tmp/mesos.txt
 	echo -n "--ip=$sysip --hostname=$sysip --zk=$(cat /etc/mesos/zk) " >> /tmp/mesos.txt
-	echo -n "--quorum=$k --work_dir=/var/lib/mesos" >> /tmp/mesos.txt
+	echo "--quorum=$k --work_dir=/var/lib/mesos" >> /tmp/mesos.txt
 
 	k=`expr $(awk '/ExecStart/{print NR;exit}' mesos-master.service) - 1`
 	sed -i -e '/ExecStart/d' -e "$k r /tmp/mesos.txt" mesos-master.service
 
 # Update marathon.service
-	echo -n "ExecStart=/usr/sbin/marathon --master $(cat /etc/mesos/zk) " > /tmp/marathon.txt
-	echo -n "--zk $(cat /etc/mesos/zk | sed 's/mesos/marathon/')" >> /tmp/marathon.txt
+	echo -n "   ExecStart=/usr/sbin/marathon --master $(cat /etc/mesos/zk) " > /tmp/marathon.txt
+	echo "--zk $(cat /etc/mesos/zk | sed 's/mesos/marathon/')" >> /tmp/marathon.txt
 
 	k=`expr $(awk '/ExecStart/{print NR;exit}' marathon.service) - 1`
 	sed -i -e '/ExecStart/d' -e "$k r /tmp/marathon.txt" marathon.service
