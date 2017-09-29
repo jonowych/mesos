@@ -34,6 +34,7 @@ syshost=$(hostname)
 sysip=$(ifconfig | grep $intf -A 1 | grep inet | awk '{print $2}' | awk -F: '{print $2}')
 sysnode=$(echo $sysip | awk -F. '{print $4}')
 
+echo $(tput sgr0)
 case $mesos in
 
 0m) 
@@ -57,7 +58,7 @@ echo "No need to change mesos-slave.service and cluster configuration."
 echo "$(tput setaf 6)!! This is new node !!$(tput sgr0)"
 
 # Download /etc/mesos/zk from master node
-	echo && read -p "Please enter master node number (without subnet): " master
+	read -p "Please enter master node number (without subnet): " master
 	masterip=$(echo $sysip | cut -d. -f4 --complement).$master
 
 	ping -q -c3 $masterip > /dev/null
@@ -153,9 +154,9 @@ echo && exit
 ;;
 
 1new)
-echo "$(tput setaf 6)!! This is new node !!$(tput sgr0)"
-echo "Please [enter] in cluster size to install mesos-slave package."
-echo && exit  
+echo "$(tput setaf 6)!! This is brand new node !!"
+echo "$Please [enter] in cluster size to install mesos-slave package."
+echo $(tput sgr0) && exit  
 ;;
 
 esac
