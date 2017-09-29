@@ -106,7 +106,7 @@ echo "$(tput setaf 6)!! This is mesos master node !!$(tput sgr0)"
 echo "Update mesos-master.service and cluster configuration."
 
 # get zookeeper IP information 
-	zoonode=$/etc/zookeeper/conf/myid
+	zoonode=$(cat /etc/zookeeper/conf/myid)
 	zooip=$(echo $sysip | cut -d. -f4 --complement).$zoonode
 	echo $sysnode > /etc/zookeeper/conf/myid
 
