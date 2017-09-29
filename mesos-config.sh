@@ -160,5 +160,6 @@ echo && exit
 esac
 
 echo && echo "$(tput setaf 3)!! Warning - Master node will restart in 10 seconds ........"
+echo $(tput sgr0)
 sleep 10
 shutdown -r now
