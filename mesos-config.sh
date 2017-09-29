@@ -41,11 +41,11 @@ echo "$(tput setaf 6)!! This is mesos master node !!$(tput sgr0)"
 echo "Update mesos-master.service with system IP."
 
 #get zookeeper IP information 
-	zoonode=$/etc/zookeeper/conf/myid
+	zoonode=$(cat /etc/zookeeper/conf/myid)
 	zooip=$(echo $sysip | cut -d. -f4 --complement).$zoonode
 	echo $sysnode > /etc/zookeeper/conf/myid
 # Update mesos-master.service
-	sed -i "s|=$zooip|=$sysip|g" mesos-master.service
+	sed -i "s/=$zooip/=$sysip/g" mesos-master.service
 ;;
 
 0s)
