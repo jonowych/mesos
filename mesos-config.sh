@@ -27,7 +27,6 @@ else
 	elif [ -e mesos-slave.service ] ; then mesos=1s
 	else mesos=1new	; fi
 fi
-cd ~
 
 # Get system IP information
 intf=$(ifconfig | grep -m1 ^e | awk '{print $1}')
@@ -161,5 +160,6 @@ esac
 
 echo && echo "$(tput setaf 3)!! Warning - Master node will restart in 10 seconds ........"
 echo $(tput sgr0)
+cd ~
 sleep 10
 shutdown -r now
