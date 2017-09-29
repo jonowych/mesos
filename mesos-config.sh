@@ -149,14 +149,14 @@ echo "Update mesos-master.service and cluster configuration."
 echo "$(tput setaf 6)!! This is mesos slave node !!$(tput sgr0)"
 echo "No need to change mesos-slave.service and cluster configuration." 
 echo && exit
+;;
 
-; #############
-	1new)
+1new)
 echo "$(tput setaf 6)!! This is new node !!$(tput sgr0)"
 echo "Please [enter] in cluster size to install mesos-slave package."
 echo && exit  
-
 ;;
+
 esac
 
 echo && echo "$(tput setaf 3)!! Warning - Master node will restart in 10 seconds ........"
