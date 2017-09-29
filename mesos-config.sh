@@ -57,7 +57,7 @@ echo "No need to change mesos-slave.service and cluster configuration."
 echo "$(tput setaf 6)!! This is new node !!$(tput sgr0)"
 
 # Download /etc/mesos/zk from master node
-	echo && read -p "Please enter master node number: " master
+	echo && read -p "Please enter master node number (without subnet): " master
 	masterip=$(echo $sysip | cut -d. -f4 --complement).$master
 
 	ping -q -c3 $masterip > /dev/null
