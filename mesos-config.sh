@@ -2,8 +2,7 @@
 
 if [ ! "${USER}" = "root" ] ; then
 	echo "!! Please enter command as $(tput setaf 1)sudo $0 $(tput sgr0)!!"
-	echo && exit
-fi
+	echo && exit ; fi
 
 read -p "How many master nodes in cluster? (Press [enter] for no change): " size
 
@@ -27,7 +26,6 @@ else
 fi
 
 echo $mesos
-
 exit
 
 # Get system IP information
@@ -35,7 +33,6 @@ intf=$(ifconfig | grep -m1 ^e | awk '{print $1}')
 syshost=$(hostname)
 sysip=$(ifconfig | grep $intf -A 1 | grep inet | awk '{print $2}' | awk -F: '{print $2}')
 sysnode=$(echo $sysip | awk -F. '{print $4}')
-
 
 case $mesos in
 
@@ -54,7 +51,7 @@ echo "Update mesos-master.service with system IP."
 #############
 	0s)
 echo "$(tput setaf 6)!! This is mesos slave node !!$(tput sgr0)"
-echo No change in mesos-slave.service nor cluster configuration. 
+echo "No need to change mesos-slave.service and cluster configuration." 
 
 #############
 	0new)
@@ -150,13 +147,13 @@ echo "Update mesos-master.service and cluster configuration."
 #############
 	1s)
 echo "$(tput setaf 6)!! This is mesos slave node !!$(tput sgr0)"
-echo "No change in mesos-slave.service nor cluster configuration."
+echo "No need to change mesos-slave.service and cluster configuration." 
 echo && exit
 
 #############
 	1new)
 echo "$(tput setaf 6)!! This is new node !!$(tput sgr0)"
-echo "Mesos-slave package is not installed because non-zero cluster size is not accepted."
+echo "Please press [enter] in cluster size to install mesos-slave package."
 echo && exit  
 
 #############
