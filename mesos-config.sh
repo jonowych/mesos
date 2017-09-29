@@ -128,7 +128,7 @@ echo "Update mesos-master.service and cluster configuration."
 	sed -i -e '/.2888.3888/d' -e "$k r /tmp/zookeeper.txt" /etc/zookeeper/conf/zoo.cfg
 
 # update mesos-master.service
-	let `k=size/2 + size%2`
+	let "k = size/2 + size%2"
 	echo -n "ExecStart=/usr/sbin/mesos-master " > /tmp/mesos.txt
 	echo -n "--ip=$sysip --hostname=$sysip --zk=$(cat /etc/mesos/zk) " >> /tmp/mesos.txt
 	echo -n "--quorum=$k --work_dir=/var/lib/mesos" >> /tmp/mesos.txt
