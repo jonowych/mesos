@@ -5,10 +5,12 @@ if [ ! "${USER}" = "root" ] ; then
 	echo && exit ; fi
 
 read -p "How many master nodes in cluster, [enter] for no change: " size
+
 cd /etc/systemd/system/
 if ! [ $size -eq $size ] 2>/dev/null ; then
 	echo -n $(tput setaf 1)
-	echo "!! Exit -- Sorry, integer only !!" && exit 
+	echo "!! Exit -- Sorry, integer only !!"
+	echo $(tput sgr0) && exit 
 
 elif [ -z $size ] ; then
 	if [ -e mesos-master.service ] ; then mesos=0m
@@ -17,14 +19,14 @@ elif [ -z $size ] ; then
 
 elif [ $size -lt 1 ] || [ $size -gt 9 ] ; then
 	echo -n $(tput setaf 1)
-	echo "!! Exit -- Please enter cluster size between 1 and 9 !!" && exit
+	echo "!! Exit -- Please enter cluster size between 1 and 9 !!"
+	echo $(tput sgr0) && exit
 
 else
 	if [ -e mesos-master.service ] ; then mesos=1m
 	elif [ -e mesos-slave.service ] ; then mesos=1s
 	else mesos=1new	; fi
 fi
-echo $(tput sgr0)
 cd ~
 
 echo $mesos
