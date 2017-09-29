@@ -25,6 +25,7 @@ else
 	else mesos=1new	; fi
 fi
 echo $(tput sgr0)
+cd ~
 
 echo $mesos
 exit
