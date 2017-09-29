@@ -56,6 +56,18 @@ echo "No need to change mesos-slave.service and cluster configuration."
 0new)
 echo "$(tput setaf 6)!! This is new node !!$(tput sgr0)"
 
+# Download /etc/mesos/zk from master node
+	echo && read -p "Please enter master node number: " master
+	masterip=$(echo $sysip | cut -d. -f4 --complement).$master
+
+	ping -q -c3 $masterip > /dev/null
+	if [ $? -eq 0 ] ; then 
+		scp sydadmin@$masterip:/etc/mesos/zk /tmp/
+	else
+	ping -c3 $masterip
+		echo "$(tput setaf 1)!! Master node $masterip is not available !!$(tput sgr0)" && echo && exit
+	fi
+
 # Add GPG key for the official mesosphere repository
 	apt-key adv --keyserver keyserver.ubuntu.com --recv E56151BF
 
@@ -66,16 +78,6 @@ echo "$(tput setaf 6)!! This is new node !!$(tput sgr0)"
 	CODENAME=$(lsb_release -cs)
 	echo "deb http://repos.mesosphere.com/${DISTRO} ${CODENAME} main" | sudo tee /etc/apt/sources.list.d/mesosphere.list
 
-# Download /etc/mesos/zk from master node
-	echo && read -p "Please enter master node number: " master
-	masterip=$(echo $sysip | cut -d. -f4 --complement).$master
-
-	ping -q -c3 $masterip > /dev/null
-	if [ $? -ne 0 ] ; then 
-		echo "$(tput setaf 1)!! No response from node $masterip !!$(tput sgr0)" && exit
-	else 
-		scp sydadmin@$masterip:/etc/mesos/zk /tmp/
-	fi
 # Install mesos package
 	echo "Installing mesos-slave package in node."
 	apt-get -y update
