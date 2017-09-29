@@ -36,8 +36,8 @@ sysip=$(ifconfig | grep $intf -A 1 | grep inet | awk '{print $2}' | awk -F: '{pr
 sysnode=$(echo $sysip | awk -F. '{print $4}')
 
 case $mesos in
-#############
-	0m) 
+
+0m) 
 echo "$(tput setaf 6)!! This is mesos master node !!$(tput sgr0)"
 echo "Update mesos-master.service with system IP."
 
@@ -47,14 +47,14 @@ echo "Update mesos-master.service with system IP."
 	echo $sysnode > /etc/zookeeper/conf/myid
 # Update mesos-master.service
 	sed -i "s/$zooip/$sysip/g" mesos-master.service
+;;
 
-#############
-	0s)
+0s)
 echo "$(tput setaf 6)!! This is mesos slave node !!$(tput sgr0)"
 echo "No need to change mesos-slave.service and cluster configuration." 
+;;
 
-#############
-	0new)
+0new)
 echo "$(tput setaf 6)!! This is new node !!$(tput sgr0)"
 
 # Add GPG key for the official mesosphere repository
@@ -100,9 +100,9 @@ EOF_mesos
 	systemctl start mesos-slave.service
 	systemctl enable mesos-slave
 	echo "$(tput setaf 3)!! Mesos-slave has been installed in node !!$(tput sgr0)"
+;;
 
-#############
-	1m)
+1m)
 echo "$(tput setaf 6)!! This is mesos master node !!$(tput sgr0)"
 echo "Update mesos-master.service and cluster configuration."
 
@@ -143,20 +143,20 @@ echo "Update mesos-master.service and cluster configuration."
 
 	k=`expr $(awk '/ExecStart/{print NR;exit}' marathon.service) - 1`
 	sed -i -e '/ExecStart/d' -e "$k r /tmp/marathon.txt" marathon.service
+;;
 
-#############
-	1s)
+1s)
 echo "$(tput setaf 6)!! This is mesos slave node !!$(tput sgr0)"
 echo "No need to change mesos-slave.service and cluster configuration." 
 echo && exit
 
-#############
+; #############
 	1new)
 echo "$(tput setaf 6)!! This is new node !!$(tput sgr0)"
 echo "Please [enter] in cluster size to install mesos-slave package."
 echo && exit  
 
-#############
+;;
 esac
 
 echo && echo "$(tput setaf 3)!! Warning - Master node will restart in 10 seconds ........"
