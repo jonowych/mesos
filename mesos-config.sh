@@ -29,9 +29,6 @@ else
 fi
 cd ~
 
-echo $mesos
-exit
-
 # Get system IP information
 intf=$(ifconfig | grep -m1 ^e | awk '{print $1}')
 syshost=$(hostname)
