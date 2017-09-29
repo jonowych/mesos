@@ -5,7 +5,7 @@ if [ ! "${USER}" = "root" ] ; then
 	echo && exit ; fi
 
 read -p "How many master nodes in cluster, [enter] for no change: " size
-
+cd /etc/systemd/system/
 if ! [ $size -eq $size ] 2>/dev/null ; then
 	echo -n $(tput setaf 1)
 	echo "!! Exit -- Sorry, integer only !!" && exit 
@@ -24,6 +24,7 @@ else
 	elif [ -e mesos-slave.service ] ; then mesos=1s
 	else mesos=1new	; fi
 fi
+echo $(tput sgr0)
 
 echo $mesos
 exit
@@ -35,7 +36,6 @@ sysip=$(ifconfig | grep $intf -A 1 | grep inet | awk '{print $2}' | awk -F: '{pr
 sysnode=$(echo $sysip | awk -F. '{print $4}')
 
 case $mesos in
-
 #############
 	0m) 
 echo "$(tput setaf 6)!! This is mesos master node !!$(tput sgr0)"
