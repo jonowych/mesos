@@ -11,8 +11,8 @@ Run scripts in following order
 8) Clone master or slave VM to more VMs
 9) sudo ~/uDocker/host-update.sh  # update IP address & hostname
 10) sudo ~/mesos/mesos-config.sh   # update mesos master or agent service information
-      Remark: answer to cluster size will behave differently:
+      - Remark: answer to cluster size will behave differently:
       - if answer [enter] in fresh VM, mesos-slave package will be installed
       - if answer [enter] in master VM, IP we be updated in mesos configuration
       - if answer [1-9] in master VM, cluster configuration will change
-        & IP address of VM becomes first member of mesosphere cluster 
+      -    & IP address of VM becomes first member of mesosphere cluster 
