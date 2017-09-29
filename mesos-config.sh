@@ -155,7 +155,7 @@ echo && exit
 
 1new)
 echo "$(tput setaf 6)!! This is brand new node !!"
-echo "$Please [enter] in cluster size to install mesos-slave package."
+echo "Please [enter] in cluster size to install mesos-slave package."
 echo $(tput sgr0) && exit  
 ;;
 
