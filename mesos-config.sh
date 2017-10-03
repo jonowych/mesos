@@ -133,7 +133,11 @@ EOF_mesos
 
 esac
 
-echo && echo "$(tput setaf 3)!! Warning - System will restart in 10 seconds ........"
+# ------------
+echo $(tput setaf 6)
+echo "!! Mesosphere re-configuration has finished. !!"
 echo $(tput sgr0)
+
+echo "!! Warning - System will restart in 10 seconds ........"
 sleep 10
 shutdown -r now
