@@ -191,10 +191,10 @@ echo $(tput setaf 6)
 echo "!! Mesosphere installation has finished. !!"
 echo $(tput sgr0)
 
-echo System will restart in 10 seconds ........
+echo && echo "$(tput setaf 3)!! Warning - System will restart in 10 seconds ........"
+echo $(tput sgr0)
 sleep 10
 shutdown -r now
-
 
 # Below are latest versions on 20170927
 # zookeeper_ver=3.4.8-1
