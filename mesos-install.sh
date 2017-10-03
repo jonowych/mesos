@@ -38,8 +38,11 @@ sysnode=$(echo $sysip | awk -F. '{print $4}')
 
 if [ $mesos = "slave" ] ; then
 	# Get mesosphere cluster configuration from master node
-	echo && echo "Slave node needs to get cluster configuration from master node."
-	read -p "Enter mesosphere master node number (without subnet): " k
+	
+	echo "$(tput setaf 6)!! This node will be installed as mesos-slave !!"
+	echo "Contact Master node to retrieve cluster configuration;$(tput sgr0)"
+	read -p "Enter mesosphere master node number (single number): " k
+		
 	masterip=$(echo $sysip | cut -d. -f4 --complement).$k
 
 	ping -q -c3 $masterip > /dev/null
@@ -62,7 +65,7 @@ echo "deb http://repos.mesosphere.com/${DISTRO} ${CODENAME} main" \
    | sudo tee /etc/apt/sources.list.d/mesosphere.list
 apt-get -y update
 
-if [ $mesos = "master"] ; then
+if [ $mesos = "master" ] ; then
 	echo "$(tput setaf 3)!! Installing zookeeper package !!$(tput sgr0)"
 	apt-get -y install zookeeperd
 	echo $sysnode > /etc/zookeeper/conf/myid
