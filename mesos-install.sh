@@ -191,7 +191,7 @@ echo $(tput setaf 6)
 echo "!! Mesosphere installation has finished. !!"
 echo $(tput sgr0)
 
-echo Master node will restart in 10 seconds ........
+echo System will restart in 10 seconds ........
 sleep 10
 shutdown -r now
 
