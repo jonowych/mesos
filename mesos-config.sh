@@ -4,18 +4,24 @@ if [ ! "${USER}" = "root" ] ; then
 	echo "!! Please enter command as $(tput setaf 1)sudo $0 $(tput sgr0)!!"
 	echo && exit ; fi
 
-read -p "How many master nodes in cluster, [enter] for no change: " size
+echo "$(tput setaf 3)How many master nodes in mesosphere cluster?"
+echo "Enter none will update individual node's meso configuration;"
+read -p "Enter [1-9] will update cluster configuration (master and slave): " size
+echo $(tput sgr0)
 
 cd /etc/systemd/system/
 if ! [ $size -eq $size ] 2>/dev/null ; then
 	echo -n $(tput setaf 1)
 	echo "!! Exit -- Sorry, integer only !!"
-	echo $(tput sgr0) && exit 
+	echo $(tput sgr0) && exit
 
 elif [ -z $size ] ; then
 	if [ -e mesos-master.service ] ; then mesos=0m
 	elif [ -e mesos-slave.service ] ; then mesos=0s
-	else mesos=0new	; fi
+	else	echo -n $(tput setaf 1)
+		echo "!! Exit -- Meso package is not installed in this node!!"
+		echo $(tput sgr0) && exit
+	fi
 
 elif [ $size -lt 1 ] || [ $size -gt 9 ] ; then
 	echo -n $(tput setaf 1)
@@ -25,7 +31,10 @@ elif [ $size -lt 1 ] || [ $size -gt 9 ] ; then
 else
 	if [ -e mesos-master.service ] ; then mesos=1m
 	elif [ -e mesos-slave.service ] ; then mesos=1s
-	else mesos=1new	; fi
+	else	echo -n $(tput setaf 1)
+		echo "!! Exit -- Meso package is not installed in this node!!"
+		echo $(tput sgr0) && exit
+	fi
 fi
 
 # Get system IP information
@@ -37,11 +46,11 @@ sysnode=$(echo $sysip | awk -F. '{print $4}')
 echo $(tput sgr0)
 case $mesos in
 
-0m) 
+0m)
 echo "$(tput setaf 6)!! This is mesos master node !!$(tput sgr0)"
 echo "Update mesos-master.service with system IP."
 
-#get zookeeper IP information 
+#get zookeeper IP information
 	zoonode=$(cat /etc/zookeeper/conf/myid)
 	zooip=$(echo $sysip | cut -d. -f4 --complement).$zoonode
 	echo $sysnode > /etc/zookeeper/conf/myid
@@ -51,57 +60,7 @@ echo "Update mesos-master.service with system IP."
 
 0s)
 echo "$(tput setaf 6)!! This is mesos slave node !!$(tput sgr0)"
-echo "No need to change mesos-slave.service and cluster configuration." 
-;;
-
-0new)
-echo "$(tput setaf 6)!! This is new node !!$(tput sgr0)"
-
-# Download /etc/mesos/zk from master node
-	read -p "Please enter master node number (without subnet): " master
-	masterip=$(echo $sysip | cut -d. -f4 --complement).$master
-
-	ping -q -c3 $masterip > /dev/null
-	if [ $? -eq 0 ] ; then 
-		scp sydadmin@$masterip:/etc/mesos/zk /tmp/
-	else
-	ping -c3 $masterip
-		echo "$(tput setaf 1)!! Master node $masterip is not available !!$(tput sgr0)" && echo && exit
-	fi
-
-# Add GPG key for the official mesosphere repository
-	apt-key adv --keyserver keyserver.ubuntu.com --recv E56151BF
-
-# Add mesosphere repository to APT sources
-	DISTRO=$(lsb_release -is | tr '[:upper:]' '[:lower:]')
-
-# Add repository according linux distro
-	CODENAME=$(lsb_release -cs)
-	echo "deb http://repos.mesosphere.com/${DISTRO} ${CODENAME} main" | sudo tee /etc/apt/sources.list.d/mesosphere.list
-
-# Install mesos package
-	echo "Installing mesos-slave package in node."
-	apt-get -y update
-	apt-get -y install mesos
-
-# set up mesos-slave.service
-cat <<EOF_mesos > /etc/systemd/system/mesos-slave.service
-[Unit]
-   Description=Mesos Slave Service
-
-[Service]
-   ExecStart=/usr/sbin/mesos-slave --master=$(cat /tmp/zk) --work_dir=/var/lib/mesos
-
-[Install]
-   WantedBy=multi-user.target
-
-EOF_mesos
-
-# Start mesos-slave service after configuration set up
-	systemctl daemon-reload
-	systemctl start mesos-slave.service
-	systemctl enable mesos-slave
-	echo "$(tput setaf 3)!! Mesos-slave has been installed in node !!$(tput sgr0)"
+echo "No change in mesos-slave.service and cluster configuration."
 ;;
 
 1m)
@@ -114,21 +73,21 @@ echo "Update mesos-master.service and cluster configuration."
 	echo $sysnode > /etc/zookeeper/conf/myid
 
 # update /etc/mesos/zk and prepare zookeeper.txt
-	rm -f /tmp/zookeeper.txt
+	rm -f /tmp/zoo.txt
 	echo -n "zk://"  > /etc/mesos/zk
-	for (( k=$sysnode; k<`expr $sysnode + $size`; k++))	
+	for (( k=$sysnode; k<`expr $sysnode + $size`; k++))
 	do
    		newip=$(echo $sysip | cut -d. -f4 --complement).$k
    		echo -n "$newip:2181," >> /etc/mesos/zk
-		echo "server.$k=zookeeper$k:2888:3888" >> /tmp/zookeeper.txt
+		echo "server.$k=zookeeper$k:2888:3888" >> /tmp/zoo.txt
 	done
 
 # append /etc/mesos/zk with "/mesos"
-	sed -i 's|,$|/mesos|' /etc/mesos/zk 		
+	sed -i 's|,$|/mesos|' /etc/mesos/zk
 
 # import zookeeper.txt to /etc/zookeeper/conf/zoo.cfg.
 	k=`expr $(awk '/.2888.3888/{print NR;exit}' /etc/zookeeper/conf/zoo.cfg) - 1`
-	sed -i -e '/.2888.3888/d' -e "$k r /tmp/zookeeper.txt" /etc/zookeeper/conf/zoo.cfg
+	sed -i -e '/.2888.3888/d' -e "$k r /tmp/zoo.txt" /etc/zookeeper/conf/zoo.cfg
 
 # update mesos-master.service
 	let "k = size/2 + size%2"
@@ -148,20 +107,35 @@ echo "Update mesos-master.service and cluster configuration."
 ;;
 
 1s)
-echo "$(tput setaf 6)!! This is mesos slave node !!$(tput sgr0)"
-echo "No need to change mesos-slave.service and cluster configuration." 
-echo && exit
-;;
+	# Get mesosphere cluster configuration from master node
+	echo "$(tput setaf 6)!! This is mesos slave node !!"
+	echo "Contact Master node to retrieve cluster configuration;$(tput sgr0)"
+	read -p "Enter mesosphere master node number (single number): " k
+	masterip=$(echo $sysip | cut -d. -f4 --complement).$k
 
-1new)
-echo "$(tput setaf 6)!! This is brand new node !!"
-echo "Please [enter] in cluster size to install mesos-slave package."
-echo $(tput sgr0) && exit  
+	ping -q -c3 $masterip > /dev/null
+		if [ $? -eq 0 ] ; then
+			scp sydadmin@$masterip:/etc/mesos/zk /tmp/
+		else
+			echo -n $(tput setaf 1)
+			echo "!! Master node $masterip is not available !!"
+			echo $(tput sgr0) && exit
+		fi
+
+# set up mesos-slave.service
+cat <<EOF_mesos > /etc/systemd/system/mesos-slave.service
+[Unit]
+   Description=Mesos Slave Service
+[Service]
+   ExecStart=/usr/sbin/mesos-slave --master=$(cat /tmp/zk) --work_dir=/var/lib/mesos
+[Install]
+   WantedBy=multi-user.target
+EOF_mesos
 ;;
 
 esac
 
-echo && echo "$(tput setaf 3)!! Warning - Master node will restart in 10 seconds ........"
+echo && echo "$(tput setaf 3)!! Warning - Machine will restart in 10 seconds ........"
 echo $(tput sgr0)
 cd ~
 sleep 10
