@@ -4,6 +4,11 @@ if [ ! "${USER}" = "root" ] ; then
 	echo "!! Please enter command as $(tput setaf 1)sudo $0 $(tput sgr0)!!"
 	echo && exit ; fi
 
+if [ ! -e mesos-master.service ] || [ ! -e mesos-slave.service ] ; then
+	echo -n $(tput setaf 1)
+	echo "!! Exit -- Meso package is not installed in this node!!"
+	echo $(tput sgr0) && exit ; fi
+
 echo "$(tput setaf 3)How many master nodes in mesosphere cluster?"
 echo "Enter none will update individual node's meso configuration;"
 read -p "Enter [1-9] will update cluster configuration (master and slave): " size
@@ -18,23 +23,16 @@ if ! [ $size -eq $size ] 2>/dev/null ; then
 elif [ -z $size ] ; then
 	if [ -e mesos-master.service ] ; then mesos=0m
 	elif [ -e mesos-slave.service ] ; then mesos=0s
-	else	echo -n $(tput setaf 1)
-		echo "!! Exit -- Meso package is not installed in this node!!"
-		echo $(tput sgr0) && exit
 	fi
 
-elif [ $size -lt 1 ] || [ $size -gt 9 ] ; then
+elif [ $size -ge 1 ] && [ $size -le 9 ] ; then
+	if [ -e mesos-master.service ] ; then mesos=1m
+	elif [ -e mesos-slave.service ] ; then mesos=1s
+	fi
+else
 	echo -n $(tput setaf 1)
 	echo "!! Exit -- Please enter cluster size between 1 and 9 !!"
 	echo $(tput sgr0) && exit
-
-else
-	if [ -e mesos-master.service ] ; then mesos=1m
-	elif [ -e mesos-slave.service ] ; then mesos=1s
-	else	echo -n $(tput setaf 1)
-		echo "!! Exit -- Meso package is not installed in this node!!"
-		echo $(tput sgr0) && exit
-	fi
 fi
 
 # Get system IP information
