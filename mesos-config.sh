@@ -5,7 +5,7 @@ if [ ! "${USER}" = "root" ] ; then
 	echo && exit ; fi
 
 if [ ! -e mesos-master.service ] || [ ! -e mesos-slave.service ] ; then
-	echo -n $(tput setaf 1)
+	echo $(tput setaf 1)
 	echo "!! Exit -- Meso package is not installed in this node!!"
 	echo $(tput sgr0) && exit ; fi
 
