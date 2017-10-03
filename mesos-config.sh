@@ -133,8 +133,7 @@ EOF_mesos
 
 esac
 
-echo && echo "$(tput setaf 3)!! Warning - Machine will restart in 10 seconds ........"
+echo && echo "$(tput setaf 3)!! Warning - System will restart in 10 seconds ........"
 echo $(tput sgr0)
-cd ~
 sleep 10
 shutdown -r now
