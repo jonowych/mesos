@@ -12,19 +12,19 @@ if [ -e /etc/systemd/system/mesos-master.service ] ; then
 elif [ -e /etc/systemd/system/mesos-slave.service ] ; then
 	echo $(tput setaf 2)
 	echo "!! Exit - This is a Slave node which already has mesos package installed!!"
-	echo $(tput sgr0)  && exit
+	echo $(tput sgr0) && exit
 else
 	echo "$(tput setaf 3)How many master nodes in mesosphere cluster?"
 	read -p "Enter [1-9] to install master, none to install slave: " size
 	echo $(tput sgr0)
 
 	if ! [ $size -eq $size ] 2>/dev/null ; then
-		echo -n $(tput setaf 1)
+		echo $(tput setaf 1)
 		echo "!! Exit -- Sorry, integer only !!"
 		echo $(tput sgr0) && exit
 	elif [ -z $size ] ; then mesos=slave
 	elif [ $size -ge 1 ] && [ $size -le 9 ] ; then mesos=master
-	else	echo -n $(tput setaf 1)
+	else	echo $(tput setaf 1)
 		echo "!! Exit -- Please enter cluster size between 1 and 9 !!"
 		echo $(tput sgr0) && exit
 	fi
