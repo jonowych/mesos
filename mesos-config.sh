@@ -4,7 +4,8 @@ if [ ! "${USER}" = "root" ] ; then
 	echo "!! Please enter command as $(tput setaf 1)sudo $0 $(tput sgr0)!!"
 	echo && exit ; fi
 
-if [ ! -e mesos-master.service ] || [ ! -e mesos-slave.service ] ; then
+cd /etc/systemd/system/
+if [ ! -e mesos-master.service ] && [ ! -e mesos-slave.service ] ; then
 	echo $(tput setaf 1)
 	echo "!! Exit -- Meso package is not installed in this node!!"
 	echo $(tput sgr0) && exit ; fi
@@ -14,7 +15,6 @@ echo "Enter none to update individual node's meso configuration;"
 read -p "Enter [1-9] to update cluster configuration (master and slave): " size
 echo $(tput sgr0)
 
-cd /etc/systemd/system/
 if ! [ $size -eq $size ] 2>/dev/null ; then
 	echo -n $(tput setaf 1)
 	echo "!! Exit -- Sorry, integer only !!"
