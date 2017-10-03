@@ -10,8 +10,8 @@ if [ ! -e mesos-master.service ] || [ ! -e mesos-slave.service ] ; then
 	echo $(tput sgr0) && exit ; fi
 
 echo "$(tput setaf 3)How many master nodes in mesosphere cluster?"
-echo "Enter none will update individual node's meso configuration;"
-read -p "Enter [1-9] will update cluster configuration (master and slave): " size
+echo "Enter none to update individual node's meso configuration;"
+read -p "Enter [1-9] to update cluster configuration (master and slave): " size
 echo $(tput sgr0)
 
 cd /etc/systemd/system/
