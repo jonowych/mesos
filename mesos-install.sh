@@ -7,11 +7,11 @@ if [ ! "${USER}" = "root" ] ; then
 
 if [ -e /etc/systemd/system/mesos-master.service ] ; then
 	echo $(tput setaf 2)
-	echo "!! This is a Master node, mesos package is not installed!!"
+	echo "!! Exit - This is a Master node which already has mesos package installed!!"
 	echo $(tput sgr0) && exit
 elif [ -e /etc/systemd/system/mesos-slave.service ] ; then
 	echo $(tput setaf 2)
-	echo "!! This is a Slave node, mesos package is not installed!!"
+	echo "!! Exit - This is a Slave node which already has mesos package installed!!"
 	echo $(tput sgr0)  && exit
 else
 	echo "$(tput setaf 3)How many master nodes in mesosphere cluster?"
