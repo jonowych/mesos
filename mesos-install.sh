@@ -85,7 +85,7 @@ if [ $mesos = "slave" ] ; then
 		fi
 fi
 
-if [ $mesos = "new" ] ; then
+if [ ! -e /etc/apt/sources.list.d/mesosphere.list ] ; then
 	# Add GPG key for the official mesosphere repository and update
 	apt-key adv --keyserver keyserver.ubuntu.com --recv E56151BF
 	# Add mesosphere repository to APT sources
