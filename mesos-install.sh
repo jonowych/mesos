@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 if [ ! "${USER}" = "root" ] ; then
    echo "!! Please enter command as root $(tput setaf 1)sudo $0 $(tput sgr0)!!"
    echo && exit ; fi
