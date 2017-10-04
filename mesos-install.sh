@@ -17,31 +17,26 @@ fi
 echo $(tput setaf 3)
 echo "How many master nodes in mesosphere cluster?"
 echo "Enter [0] to install slave; or [1-9] to install master;"
-read -p "Enter none to update IP in mesos-master start-up only: " size 
+read -p "Enter none to update IP in mesos-master start-up only: " size
 echo $(tput sgr0)
 
-if [ -z $size ] ; then 
-        if [ $mesos = "master" ] ; then mesos=update
-	else	echo $(tput setaf 1)
-		echo "!! No update because this node is $mesos !!" 
-		echo $(tput sgr0) && exit
-	fi 
-elif ! [ $size -eq $size ] 2>/dev/null ; then
+if ! [ $size -eq $size ] 2>/dev/null ; then
         echo $(tput setaf 1)
         echo "!! Exit -- Sorry, integer only !!"
         echo $(tput sgr0) && exit
-elif [ $mesos="new" ] && [ $size -ge 1 ] && [ $size -le 9 ] ; then mesos=master
-elif [ $mesos="new" ] && [ $size -eq 0 ] ; then mesos=slave
-else
+elif [ -z $size ] ; then
+        if [ $mesos = "master" ] ; then size=empty
+	else	echo $(tput setaf 1)
+		echo "!! No update because this node is $mesos !!"
+		echo $(tput sgr0) && exit
+	fi
+elif [ $size -lt 0 ] || [ $size -gt 9 ] ; then
         echo $(tput setaf 1)
         echo "!! Exit -- Please enter cluster size between 0 and 9 !!"
         echo $(tput sgr0) && exit
+elif [ $mesos = "new" ] && [ $size -eq 0 ] ; then mesos=slave
+elif [ $mesos = "new" ] ; then mesos=master
 fi
-
-echo "Mesos package will be installed in this node."
-echo "If already installed, mesos configuration will be updated."
-echo "Action=$mesos, press Ctl-C if not proceed."
-echo && sleep 10
 
 # Get system IP information
 intf=$(ifconfig | grep -m1 ^e | awk '{print $1}')
@@ -49,7 +44,12 @@ syshost=$(hostname)
 sysip=$(ifconfig | grep $intf -A 1 | grep inet | awk '{print $2}' | awk -F: '{print $2}')
 sysnode=$(echo $sysip | awk -F. '{print $4}')
 
-if [ $mesos = "update" ] ; then
+echo "Mesos package will be installed in this node $sysip"
+echo "If already installed, mesos configuration will be updated."
+echo "Action=$mesos & size=$size, press Ctl-C if not proceed."
+echo && sleep 10
+
+if [ $size = "empty" ] ; then
 	echo $(tput setaf 6)
 	echo "!! Update mesos-master.service with system IP."
 	echo $(tput sgr0)
@@ -59,7 +59,7 @@ if [ $mesos = "update" ] ; then
 	zooip=$(echo $sysip | cut -d. -f4 --complement).$zoonode
 	echo $sysnode > /etc/zookeeper/conf/myid
 	# Update mesos-master.service
-	sed -i "s/=$zooip/=$sysip/g" mesos-master.service
+	sed -i "s/=$zooip/=$sysip/g" /etc/systemd/system/mesos-master.service
 
 	echo && echo "!! Warning - System will restart in 10 seconds ........"
 	sleep 10
