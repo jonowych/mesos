@@ -29,7 +29,7 @@ elif [ -z $size ] ; then
 	echo "!! No update because this node is $mesos !!"
 	echo $(tput sgr0) && exit
 elif [ $mesos = "new" ] && [ $size -eq 0 ] ; then mesos=slave
-elif [ $mesos = "new" ] && [ $size -ge 1 ] || [ $size -le 9 ] ; then mesos=master
+elif [ $mesos = "new" ] && [ $size -ge 1 ] && [ $size -le 9 ] ; then mesos=master
 else	echo $(tput setaf 1)
         echo "!! Exit -- Please enter cluster size between 0 and 9 !!"
         echo $(tput sgr0) && exit
