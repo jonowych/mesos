@@ -4,9 +4,9 @@ if [ ! "${USER}" = "root" ] ; then
    echo "!! Please enter command as root $(tput setaf 1)sudo $0 $(tput sgr0)!!"
    echo && exit ; fi
 
-if [ -e /etc/systemd/system/mesos-master.service ] ; then node=master
-elif [ -e /etc/systemd/system/mesos-slave.service ] ; then node=slave
-elif [ ! -e /etc/apt/sources.list.d/mesosphere.list ] ; then node=new
+if [ -e /etc/systemd/system/mesos-master.service ] ; then mesos=master
+elif [ -e /etc/systemd/system/mesos-slave.service ] ; then mesos=slave
+elif [ ! -e /etc/apt/sources.list.d/mesosphere.list ] ; then mesos=new
 else	echo $(tput setaf 1)
 	echo "!! Error -- mesosphere.list exits but cannot find"
 	echo "neither mesos-master.service nor mesos-slave.service"
@@ -24,17 +24,17 @@ if ! [ $size -eq $size ] 2>/dev/null ; then
         echo "!! Exit -- Sorry, integer only !!"
         echo $(tput sgr0) && exit
 elif [ -z $size ] ; then
-	if [ $node = "master" ] ; then size=empty
+	if [ $mesos = "master" ] ; then size=empty
 	else	echo $(tput setaf 1)
 		echo "!! No update because this node is $mesos !!"
 		echo $(tput sgr0) && exit ; fi
 elif [ $size -eq 0 ] ; then
-        if [ $node = "new" ] || [ $node = "slave" ] ; then mesos=slave
+        if [ $mesos = "new" ] || [ $mesos = "slave" ] ; then mesos=slave
         else    echo $(tput setaf 1)
                 echo "!! No update because this is mesos-master node !!"
                 echo $(tput sgr0) && exit ; fi
 elif [ $size -ge 1 ] && [ $size -le 9 ] ; then
-        if [ $node = "new" ] || [ $node = "master" ] ; then mesos=master
+        if [ $mesos = "new" ] || [ $mesos = "master" ] ; then mesos=master
 	else    echo $(tput setaf 1)
                 echo "!! No update because this is mesos-slave node !!"
                 echo $(tput sgr0) && exit ; fi
