@@ -23,18 +23,16 @@ if ! [ $size -eq $size ] 2>/dev/null ; then
         echo $(tput setaf 1)
         echo "!! Exit -- Sorry, integer only !!"
         echo $(tput sgr0) && exit
-elif [ -z $size ] ; then
-        if [ $mesos = "master" ] ; then size=empty
-	else	echo $(tput setaf 1)
-		echo "!! No update because this node is $mesos !!"
-		echo $(tput sgr0) && exit
-	fi
-elif [ $size -lt 0 ] || [ $size -gt 9 ] ; then
-        echo $(tput setaf 1)
+elif [ -z $size ] && [ $mesos = "master" ] ; then size=empty
+elif [ -z $size ] ; then 
+	echo $(tput setaf 1)
+	echo "!! No update because this node is $mesos !!"
+	echo $(tput sgr0) && exit
+elif [ $mesos = "new" ] && [ $size -eq 0 ] ; then mesos=slave
+elif [ $mesos = "new" ] && [ $size -ge 1 ] || [ $size -le 9 ] ; then mesos=master
+else	echo $(tput setaf 1)
         echo "!! Exit -- Please enter cluster size between 0 and 9 !!"
         echo $(tput sgr0) && exit
-elif [ $mesos = "new" ] && [ $size -eq 0 ] ; then mesos=slave
-elif [ $mesos = "new" ] ; then mesos=master
 fi
 
 # Get system IP information
