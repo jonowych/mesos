@@ -4,9 +4,9 @@ if [ ! "${USER}" = "root" ] ; then
    echo "!! Please enter command as root $(tput setaf 1)sudo $0 $(tput sgr0)!!"
    echo && exit ; fi
 
-if [ -e /etc/systemd/system/mesos-master.service ] ; then mesos=master
-elif [ -e /etc/systemd/system/mesos-slave.service ] ; then mesos=slave
-elif [ ! -e /etc/apt/sources.list.d/mesosphere.list ] ; then mesos=new
+if [ -e /etc/systemd/system/mesos-master.service ] ; then node=master
+elif [ -e /etc/systemd/system/mesos-slave.service ] ; then node=slave
+elif [ ! -e /etc/apt/sources.list.d/mesosphere.list ] ; then node=new
 else	echo $(tput setaf 1)
 	echo "!! Error -- mesosphere.list exits but cannot find"
 	echo "neither mesos-master.service nor mesos-slave.service"
@@ -23,13 +23,21 @@ if ! [ $size -eq $size ] 2>/dev/null ; then
         echo $(tput setaf 1)
         echo "!! Exit -- Sorry, integer only !!"
         echo $(tput sgr0) && exit
-elif [ -z $size ] && [ $mesos = "master" ] ; then size=empty
-elif [ -z $size ] ; then 
-	echo $(tput setaf 1)
-	echo "!! No update because this node is $mesos !!"
-	echo $(tput sgr0) && exit
-elif [ $mesos = "new" ] && [ $size -eq 0 ] ; then mesos=slave
-elif [ $mesos = "new" ] && [ $size -ge 1 ] && [ $size -le 9 ] ; then mesos=master
+elif [ -z $size ] ; then
+	if [ $node = "master" ] ; then size=empty
+	else	echo $(tput setaf 1)
+		echo "!! No update because this node is $mesos !!"
+		echo $(tput sgr0) && exit ; fi
+elif [ $size -eq 0 ] ; then
+        if [ $node = "new" ] || [ $node = "slave" ] ; then mesos=slave
+        else    echo $(tput setaf 1)
+                echo "!! No update because this is mesos-master node !!"
+                echo $(tput sgr0) && exit ; fi
+elif [ $size -ge 1 ] && [ $size -le 9 ] ; then
+        if [ $node = "new" ] || [ $node = "master" ] ; then mesos=master
+	else    echo $(tput setaf 1)
+                echo "!! No update because this is mesos-slave node !!"
+                echo $(tput sgr0) && exit ; fi
 else	echo $(tput setaf 1)
         echo "!! Exit -- Please enter cluster size between 0 and 9 !!"
         echo $(tput sgr0) && exit
@@ -43,7 +51,7 @@ sysnode=$(echo $sysip | awk -F. '{print $4}')
 
 echo "Mesos package will be installed in this node $sysip"
 echo "If already installed, mesos configuration will be updated."
-echo "Action=$mesos & size=$size, press Ctl-C if not proceed."
+echo "Install mesos-$mesos with size=$size, press Ctl-C if not proceed."
 echo && sleep 10
 
 if [ $size = "empty" ] ; then
