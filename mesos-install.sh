@@ -205,7 +205,6 @@ echo "$(tput setaf 3)!! Installing marathon package !!$(tput sgr0)"
 
 	# set up marathon info data
    	mkdir -p /etc/marathon/conf
-   	echo $sysip > /etc/marathon/conf/ip
 	echo $sysip > /etc/marathon/conf/hostname
 
 # set up marathon startup service
