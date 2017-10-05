@@ -101,7 +101,8 @@ if [ $mesos = "m_1" ] || [ $mesos = "n_1" ] ; then
 	rm -f /tmp/zoo.txt
 	for (( k=$sysnode; k<`expr $sysnode + $size`; k++))
 	do
-		echo "server.$k=zookeeper$k:2888:3888" >> /tmp/zoo.txt
+		newip=$(echo $sysip | cut -d. -f4 --complement).$k
+		echo "server.$k=$newip:2888:3888" >> /tmp/zoo.txt
 	done
 
 	k=`expr $(awk '/.2888.3888/{print NR;exit}' /etc/zookeeper/conf/zoo.cfg) - 1`
