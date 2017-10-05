@@ -188,7 +188,8 @@ cat <<EOF_mesos > /etc/systemd/system/mesos-master.service
 [Service]
    ExecStart=/usr/sbin/mesos-master --ip=$sysip \
 	--hostname=$sysip --zk=$(cat /etc/mesos/zk) \
-	--quorum=$(cat /etc/mesos-master/quorum) --work_dir=/var/lib/mesos
+	--quorum=$(cat /etc/mesos-master/quorum) \
+	--cluster=Cluster01 --work_dir=/var/lib/mesos
 
 [Install]
    WantedBy=multi-user.target
