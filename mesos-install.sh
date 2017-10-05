@@ -49,7 +49,7 @@ intf=$(ifconfig | grep -m1 ^e | awk '{print $1}')
 syshost=$(hostname)
 sysip=$(ifconfig | grep $intf -A 1 | grep inet | awk '{print $2}' | awk -F: '{print $2}')
 sysnode=$(echo $sysip | awk -F. '{print $4}')
-sed -i -e "/$syshost/i $sysip\tsyshost" -e "/$syshost/d" /etc/hosts
+sed -i -e "/$syshost/i $sysip\t$syshost" -e "/$syshost/d" /etc/hosts
 
 echo "Mesos package will be installed in this node $sysip"
 echo "If already installed, mesos configuration will be updated."
@@ -123,6 +123,7 @@ echo "$(tput setaf 3)!! Installing zookeeper package !!$(tput sgr0)"
 	sed -i -e '/.2888.3888/d' -e "$k r /tmp/zoo.txt" /etc/zookeeper/conf/zoo.cfg
 
 	# Start zookeeper service after configuration
+	systemctl daemon-reload
 	systemctl start zookeeper
 	systemctl enable zookeeper
 
