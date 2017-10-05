@@ -205,7 +205,9 @@ echo "$(tput setaf 3)!! Installing marathon package !!$(tput sgr0)"
 
 	# set up marathon info data
    	mkdir -p /etc/marathon/conf
-	echo $sysip > /etc/marathon/conf/hostname
+	cp /etc/mesos-master/hostname /etc/marathon/conf/hostname
+	cp /etc/mesos/zk /etc/marathon/conf/master
+	sed 's/mesos/marathon/' /etc/mesos/zk > /etc/marathon/conf/zk
 
 # set up marathon startup service
 cat <<EOF_marathon > /etc/systemd/system/marathon.service
