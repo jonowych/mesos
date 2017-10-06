@@ -33,7 +33,8 @@ elif [ -z $size ] || [ $size -lt 0 ] || [ $size -gt 9 ] ; then
         echo "!! Exit -- Please enter cluster size between 0 and 9 !!"
         echo $(tput sgr0) && exit
 elif [ $mesos = "master" ] && [ $size -eq 0 ] ; then mesos=m_0
-elif [ $mesos = "slave" ] && [ $size -eq 0 ] ; then mesos=s_0
+elif [ $mesos = "slave" ] && [ $size -eq 0 ] ; then
+	echo "This node is not updated because it has mesos-slave installed" && echo && exit
 elif [ $mesos = "new" ] && [ $size -eq 0 ] ; then mesos=n_0
 elif [ $mesos = "master" ] && [ $size -ge 1 ] && [ $size -le 9 ] ; then mesos=m_1
 elif [ $mesos = "slave" ] && [ $size -ge 1 ] && [ $size -le 9 ] ; then mesos=s_1
@@ -49,11 +50,10 @@ sed -i -e "/$syshost/i $sysip\t$syshost" -e "/$syshost/d" /etc/hosts
 
 echo "Mesos package will be installed in this node $sysip"
 echo "If already installed, mesos configuration will be updated."
-echo "Status=$mesos, press Ctl-C within 10 seconds to exit script."
+echo "$(tput setaf 3)Package=$mesos$(tput sgr0), press Ctl-C within 10 seconds to exit script."
 echo && sleep 10
 
 # Prepare zk cluster configuration for slave
-if [ $mesos = "s_0" ] ; then echo "No update because this node is installed as mesos-slave" && echo && exit ; fi
 if [ $mesos = "n_0" ] || [ $mesos = "s_1" ] ; then
 	# Get mesosphere cluster configuration from master node
 
