@@ -32,13 +32,13 @@ elif [ -z $size ] || [ $size -lt 0 ] || [ $size -gt 9 ] ; then
 	echo $(tput setaf 1)
         echo "!! Exit -- Please enter cluster size between 0 and 9 !!"
         echo $(tput sgr0) && exit
-elif [ $mesos = "master" ] && [ $size -eq 0 ] ; then mesos=m_0
+elif [ $mesos = "master" ] && [ $size -eq 0 ] ; then mesos=master_IP_update
 elif [ $mesos = "slave" ] && [ $size -eq 0 ] ; then
 	echo "This node is not updated because it has mesos-slave installed" && echo && exit
-elif [ $mesos = "new" ] && [ $size -eq 0 ] ; then mesos=n_0
-elif [ $mesos = "master" ] && [ $size -ge 1 ] && [ $size -le 9 ] ; then mesos=m_1
-elif [ $mesos = "slave" ] && [ $size -ge 1 ] && [ $size -le 9 ] ; then mesos=s_1
-elif [ $mesos = "new" ] && [ $size -ge 1 ] && [ $size -le 9 ] ; then mesos=n_1
+elif [ $mesos = "new" ] && [ $size -eq 0 ] ; then mesos=slave_install
+elif [ $mesos = "master" ] && [ $size -ge 1 ] && [ $size -le 9 ] ; then mesos=master_cluster_update
+elif [ $mesos = "slave" ] && [ $size -ge 1 ] && [ $size -le 9 ] ; then mesos=slave_cluster_update
+elif [ $mesos = "new" ] && [ $size -ge 1 ] && [ $size -le 9 ] ; then mesos=master_install
 fi
 
 # Get system IP information
@@ -50,11 +50,11 @@ sed -i -e "/$syshost/i $sysip\t$syshost" -e "/$syshost/d" /etc/hosts
 
 echo "Mesos package will be installed in this node $sysip"
 echo "If already installed, mesos configuration will be updated."
-echo "$(tput setaf 3)Package=$mesos$(tput sgr0), press Ctl-C within 10 seconds to exit script."
+echo "$(tput setaf 3)Action=$mesos$(tput sgr0), press Ctl-C within 10 seconds to exit script."
 echo && sleep 10
 
 # Prepare zk cluster configuration for slave
-if [ $mesos = "n_0" ] || [ $mesos = "s_1" ] ; then
+if [ $mesos = "slave_install" ] || [ $mesos = "slave_cluster_update" ] ; then
 	# Get mesosphere cluster configuration from master node
 
 	echo "$(tput setaf 6)!! This node is installed as mesos-slave !!"
@@ -88,13 +88,13 @@ fi
 
 # Start packages installation - zookeeper, mesos, marathon, chronos
 ### zookeeper installation
-if [ $mesos = "n_0" ] || [ $mesos = "n_1" ] ; then
+if [ $mesos = "master_install" ] ; then
 echo "$(tput setaf 3)!! Installing zookeeper package !!$(tput sgr0)"
 	apt-get -y install zookeeperd
 fi
 
 # zookeeper configuration
-if [ $mesos = "m_1" ] || [ $mesos = "n_1" ] ; then
+if [ $mesos = "master_cluster_update" ] || [ $mesos = "master_install" ] ; then
 	echo $sysnode > /etc/zookeeper/conf/myid
 
 	# prepare zookeeper.txt and import it to /etc/zookeeper/conf/zoo.cfg.
@@ -109,17 +109,15 @@ if [ $mesos = "m_1" ] || [ $mesos = "n_1" ] ; then
 	sed -i -e '/.2888.3888/d' -e "$k r /tmp/zoo.txt" /etc/zookeeper/conf/zoo.cfg
 
 	# Start zookeeper service after configuration
-	systemctl daemon-reload
-	systemctl start zookeeper
-	systemctl enable zookeeper
+	service zookeeper restart
 fi
 
 ### mesos installation
-if [ $mesos = "n_0" ] || [ $mesos = "n_1" ] ; then
+if [ $mesos = "slave_install" ] || [ $mesos = "master_install" ] ; then
 echo && echo "$(tput setaf 3)!! Installing mesos package !!$(tput sgr0)"
 	apt-get -y install mesos
 
-	if [ $mesos = "n_0" ] ; then
+	if [ $mesos = "slave_install" ] ; then
 		# remove zookeeper because slave does not need it
 		systemctl stop zookeeper
 		systemctl disable zookeeper
@@ -128,7 +126,7 @@ echo && echo "$(tput setaf 3)!! Installing mesos package !!$(tput sgr0)"
 fi
 
 # mesos-slave configuration
-if [ $mesos = "n_0" ] || [ $mesos = "s_1" ] ; then
+if [ $mesos = "slave_install" ] || [ $mesos = "slave_cluster_update" ] ; then
 	echo $sysip > /etc/mesos-slave/ip
 	echo $sysip > /etc/mesos-slave/hostname
 	mv /tmp/zk /etc/mesos/zk
@@ -137,10 +135,8 @@ if [ $mesos = "n_0" ] || [ $mesos = "s_1" ] ; then
 cat <<EOF_mesos > /etc/systemd/system/mesos-slave.service
 [Unit]
    Description=Mesos Slave Service
-
 [Service]
    ExecStart=/usr/sbin/mesos-slave --master=$(cat /etc/mesos/zk) --work_dir=/var/lib/mesos
-
 [Install]
    WantedBy=multi-user.target
 EOF_mesos
@@ -151,7 +147,7 @@ EOF_mesos
 	systemctl enable mesos-slave
 
 # mesos-master configuration
-elif [ $mesos = "m_0" ] ; then
+elif [ $mesos = "master_IP_update" ] ; then
 	echo $sysip > /etc/mesos-master/ip
 	echo $sysip > /etc/mesos-master/hostname
 	echo $sysnode > /etc/zookeeper/conf/myid
@@ -160,7 +156,7 @@ elif [ $mesos = "m_0" ] ; then
 	zooip=$(echo $sysip | cut -d. -f4 --complement).$zoonode
 	sed -i "s/=$zooip/=$sysip/g" /etc/systemd/system/mesos-master.service
 
-elif [ $mesos = "n_1" ] || [ $mesos = "m_1" ] ; then
+elif [ $mesos = "master_install" ] || [ $mesos = "master_cluster_update" ] ; then
 	echo cluster01 > /etc/mesos-master/cluster
 	echo $sysip > /etc/mesos-master/ip
 	echo $sysip > /etc/mesos-master/hostname
@@ -184,13 +180,11 @@ cat <<EOF_mesos > /etc/systemd/system/mesos-master.service
    Description=Mesos Master Service
    After=zookeeper.service
    Requires=zookeeper.service
-
 [Service]
    ExecStart=/usr/sbin/mesos-master --ip=$sysip \
 	--hostname=$sysip --zk=$(cat /etc/mesos/zk) \
 	--quorum=$(cat /etc/mesos-master/quorum) \
 	--cluster=Cluster01 --work_dir=/var/lib/mesos
-
 [Install]
    WantedBy=multi-user.target
 EOF_mesos
@@ -202,13 +196,13 @@ EOF_mesos
 fi
 
 ### marathon installation in master node
-if [ $mesos = "n_1" ] ; then
+if [ $mesos = "master_install" ] ; then
 	echo "$(tput setaf 3)!! Installing marathon package !!$(tput sgr0)"
    	apt-get -y install marathon
 fi
 
 # marathon configuration in master node
-if [ $mesos = "m_1" ] || [ $mesos = "n_1" ] ; then
+if [ $mesos = "master_cluster_update" ] || [ $mesos = "master_install" ] ; then
 	# set up marathon info data
    	mkdir -p /etc/marathon/conf
 	cp /etc/mesos-master/hostname /etc/marathon/conf/hostname
@@ -221,10 +215,8 @@ cat <<EOF_marathon > /etc/systemd/system/marathon.service
    Description=Marathon Service
    After=mesos-master.service
    Requires=mesos-master.service
-
 [Service]
    ExecStart=/usr/bin/marathon --master $(cat /etc/mesos/zk) --zk $(cat /etc/mesos/zk | sed 's/mesos/marathon/')
-
 [Install]
    WantedBy=multi-user.target
 EOF_marathon
@@ -236,22 +228,20 @@ EOF_marathon
 fi
 
 ### chronos installation in master node
-if [ $mesos = "n_1" ] ; then
+if [ $mesos = "master_install" ] ; then
 echo "$(tput setaf 3)!! Installing chronos !!$(tput sgr0)"
 	apt-get -y install chronos
 fi
 
 # chronos configuration in master node
-if [ $mesos = "m_1" ] || [ $mesos = "n_1" ] ; then
+if [ $mesos = "master_install" ] ; then
 cat <<EOF_chronos > /etc/systemd/system/chronos.service
 [Unit]
    Description=Chronos Service
    After=marathon.service
    Requires=marathon.service
-
 [Service]
    ExecStart=/usr/bin/chronos
-
 [Install]
    WantedBy=multi-user.target
 EOF_chronos
