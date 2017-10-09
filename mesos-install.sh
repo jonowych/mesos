@@ -157,9 +157,9 @@ elif [ $mesos = "master_IP_update" ] ; then
 	sed -i "s/=$zooip/=$sysip/g" /etc/systemd/system/mesos-master.service
 
 elif [ $mesos = "master_install" ] || [ $mesos = "master_cluster_update" ] ; then
-	echo cluster01 > /etc/mesos-master/cluster
-	echo $sysip > /etc/mesos-master/ip
-	echo $sysip > /etc/mesos-master/hostname
+#	echo cluster01 > /etc/mesos-master/cluster
+#	echo $sysip > /etc/mesos-master/ip
+#	echo $sysip > /etc/mesos-master/hostname
 	
 	# Configure /etc/mesos/zk
 	echo -n "zk://"  > /etc/mesos/zk
@@ -171,8 +171,8 @@ elif [ $mesos = "master_install" ] || [ $mesos = "master_cluster_update" ] ; the
 	sed -i 's|,$|/mesos|' /etc/mesos/zk
 
 	# set up quorum (>50% of master members in cluster)
-	let "k = size/2 +size%2"
-	echo $k > /etc/mesos-master/quorum
+#	let "k = size/2 + size%2"
+#	echo $k > /etc/mesos-master/quorum
 
 # set up mesos-master.service
 cat <<EOF_mesos > /etc/systemd/system/mesos-master.service
@@ -183,8 +183,8 @@ cat <<EOF_mesos > /etc/systemd/system/mesos-master.service
 [Service]
    ExecStart=/usr/sbin/mesos-master --ip=$sysip \
 	--hostname=$sysip --zk=$(cat /etc/mesos/zk) \
-	--quorum=$(cat /etc/mesos-master/quorum) \
-	--cluster=Cluster01 --work_dir=/var/lib/mesos
+	--quorum=`expr size/2 + 1` \
+	--cluster=cluster01 --work_dir=/var/lib/mesos
 [Install]
    WantedBy=multi-user.target
 EOF_mesos
