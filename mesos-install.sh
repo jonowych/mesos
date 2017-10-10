@@ -130,6 +130,8 @@ fi
 if [ $mesos = "slave_install" ] || [ $mesos = "slave_cluster_update" ] ; then
 	echo $sysip > /etc/mesos-slave/ip
 	echo $sysip > /etc/mesos-slave/hostname
+	echo 'docker,mesos' > /etc/mesos-slave/containerizers
+	echo '10mins' > /etc/mesos-slave/executor_registration_timeout
 	mv /tmp/zk /etc/mesos/zk
 
 # set up mesos-slave.service
