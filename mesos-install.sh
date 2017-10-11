@@ -19,7 +19,8 @@ if [ $mesos = "new" ] ; then
 	echo "!! This node is new, which does not have mesos installed !!"
 	echo "Enter [0] to install mesos-slave; or [1-9] to install mesos-master;"
 else 	echo "!! This node already has mesos-$mesos installed !!"
-	echo "Enter [0] to update IP only; or [1-9] to update cluster configuration;"
+	echo "Enter [1-9] to update cluster configuration;"
+	echo "or enter [0] to only update mesos-master IP."
 fi
 echo $(tput sgr0)
 
@@ -52,7 +53,7 @@ sysnode=$(echo $sysip | awk -F. '{print $4}')
 sed -i -e "/$syshost/i $sysip\t$syshost" -e "/$syshost/d" /etc/hosts
 
 echo $(tput setaf 6)
-echo "Mesos-$(echo $mesos | awk -F_ '{print $1}') will be installed in this node $sysip"
+echo "Will install mesos-$(echo $mesos | awk -F_ '{print $1}') in this node $sysip"
 echo "If already installed, mesos configuration will be updated."
 echo $(tput sgr0)
 
