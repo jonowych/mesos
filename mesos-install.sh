@@ -51,13 +51,13 @@ sed -i -e "/$syshost/i $sysip\t$syshost" -e "/$syshost/d" /etc/hosts
 echo "Mesos package will be installed in this node $sysip"
 echo "If already installed, mesos configuration will be updated."
 echo "$(tput setaf 3)Action=$mesos$(tput sgr0), press Ctl-C within 10 seconds to exit script."
-echo && sleep 10
 
 # Prepare zk cluster configuration for slave
 if [ $mesos = "slave_install" ] || [ $mesos = "slave_cluster_update" ] ; then
 	# Get mesosphere cluster configuration from master node
 
-	echo "$(tput setaf 6)!! This node is installed as mesos-slave !!"
+	echo $(tput setaf 6)
+	echo "!! This node is installed as mesos-slave !!"
 	echo "Contact Master node to retrieve cluster configuration;$(tput sgr0)"
 	read -p "Enter mesosphere master node number (single number): " k
 
@@ -71,6 +71,7 @@ if [ $mesos = "slave_install" ] || [ $mesos = "slave_cluster_update" ] ; then
 			echo "!! Master node $masterip is not available !!"
 			echo $(tput sgr0) && exit
 		fi
+else sleep 10
 fi
 
 # Set up mesosphere repository for new node
