@@ -14,14 +14,15 @@ else	echo $(tput setaf 1)
 	echo $(tput sgr0) && exit
 fi
 
-echo $(tput setaf 3)
+echo $(tput setaf 6)
 if [ $mesos = "new" ] ; then
-	echo $(tput setaf 2)"!! This is a new node !!"$(tput sgr0)
+	echo "!! This node is new, which does not have mesos installed !!"
 	echo "Enter [0] to install mesos-slave; or [1-9] to install mesos-master;"
-else 	echo $(tput setaf 6)"!! This node has mesos-$mesos installed !!"$(tput sgr0)
+else 	echo "!! This node already has mesos-$mesos installed !!"
 	echo "Enter [0] to update IP only; or [1-9] to update cluster configuration;"
 fi
-echo 
+echo $(tput sgr0)
+
 read -p "How many master nodes in mesosphere cluster? " size
 
 if ! [ $size -eq $size ] 2>/dev/null ; then
@@ -34,7 +35,9 @@ elif [ -z $size ] || [ $size -lt 0 ] || [ $size -gt 9 ] ; then
         echo $(tput sgr0) && exit
 elif [ $mesos = "master" ] && [ $size -eq 0 ] ; then mesos=master_IP_update
 elif [ $mesos = "slave" ] && [ $size -eq 0 ] ; then
-	echo "This node is not updated because it has mesos-slave installed" && echo && exit
+	echo $(tput setaf 1)
+	echo "This node is not updated because it has mesos-slave installed"
+	echo $(tput sgr0) && exit
 elif [ $mesos = "new" ] && [ $size -eq 0 ] ; then mesos=slave_install
 elif [ $mesos = "master" ] && [ $size -ge 1 ] && [ $size -le 9 ] ; then mesos=master_cluster_update
 elif [ $mesos = "slave" ] && [ $size -ge 1 ] && [ $size -le 9 ] ; then mesos=slave_cluster_update
@@ -51,7 +54,7 @@ sed -i -e "/$syshost/i $sysip\t$syshost" -e "/$syshost/d" /etc/hosts
 echo $(tput setaf 6)
 echo "Mesos-$(echo $mesos | awk -F_ '{print $1}') will be installed in this node $sysip"
 echo "If already installed, mesos configuration will be updated."
-echo $(tput setaf 3)
+echo $(tput sgr0)
 
 # Prepare zk cluster configuration for slave
 if [ $mesos = "slave_install" ] || [ $mesos = "slave_cluster_update" ] ; then
@@ -73,7 +76,6 @@ else
 	echo "Press Ctl-C within 10 seconds to exit script."
 	sleep 10
 fi
-echo $(tput sgr0)
 
 # Set up mesosphere repository for new node
 if [ ! -e /etc/apt/sources.list.d/mesosphere.list ] ; then
