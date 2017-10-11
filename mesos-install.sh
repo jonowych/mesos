@@ -16,12 +16,12 @@ fi
 
 echo $(tput setaf 3)
 if [ $mesos = "new" ] ; then
-	echo $(tput setaf 2)"!! This is a new node !! "$(tput sgr0)
-	echo "Enter [0] to install slave; or [1-9] to install master;"
-else 	echo $(tput setaf 3)"!! This node has been installed as mesos-$mesos !! "
+	echo $(tput setaf 2)"!! This is a new node !!"$(tput sgr0)
+	echo "Enter [0] to install mesos-slave; or [1-9] to install mesos-master;"
+else 	echo $(tput setaf 6)"!! This node has mesos-$mesos installed !!"$(tput sgr0)
 	echo "Enter [0] to update IP only; or [1-9] to update cluster configuration;"
 fi
-echo $(tput sgr0)
+echo 
 read -p "How many master nodes in mesosphere cluster? " size
 
 if ! [ $size -eq $size ] 2>/dev/null ; then
@@ -48,19 +48,17 @@ sysip=$(ifconfig | grep $intf -A 1 | grep inet | awk '{print $2}' | awk -F: '{pr
 sysnode=$(echo $sysip | awk -F. '{print $4}')
 sed -i -e "/$syshost/i $sysip\t$syshost" -e "/$syshost/d" /etc/hosts
 
-echo "Mesos package will be installed in this node $sysip"
+echo $(tput setaf 6)
+echo "Mesos-$(echo $mesos | awk -F_ '{print $1}') will be installed in this node $sysip"
 echo "If already installed, mesos configuration will be updated."
-echo "$(tput setaf 3)Action=$mesos$(tput sgr0), press Ctl-C within 10 seconds to exit script."
+echo $(tput setaf 3)
 
 # Prepare zk cluster configuration for slave
 if [ $mesos = "slave_install" ] || [ $mesos = "slave_cluster_update" ] ; then
 	# Get mesosphere cluster configuration from master node
 
-	echo $(tput setaf 6)
-	echo "!! This node is installed as mesos-slave !!"
-	echo "Contact Master node to retrieve cluster configuration;$(tput sgr0)"
+	echo "Contact Master node to retrieve cluster configuration;"
 	read -p "Enter mesosphere master node number (single number): " k
-
 	masterip=$(echo $sysip | cut -d. -f4 --complement).$k
 
 	ping -q -c3 $masterip > /dev/null
@@ -71,8 +69,11 @@ if [ $mesos = "slave_install" ] || [ $mesos = "slave_cluster_update" ] ; then
 			echo "!! Master node $masterip is not available !!"
 			echo $(tput sgr0) && exit
 		fi
-else sleep 10
+else
+	echo "Press Ctl-C within 10 seconds to exit script."
+	sleep 10
 fi
+echo $(tput sgr0)
 
 # Set up mesosphere repository for new node
 if [ ! -e /etc/apt/sources.list.d/mesosphere.list ] ; then
@@ -90,7 +91,7 @@ fi
 # Start packages installation - zookeeper, mesos, marathon, chronos
 ### zookeeper installation
 if [ $mesos = "master_install" ] ; then
-echo "$(tput setaf 3)!! Installing zookeeper package !!$(tput sgr0)"
+echo $(tput setaf 3)"!! Installing zookeeper package !!"$(tput sgr0)
 	apt-get -y install zookeeperd
 fi
 
