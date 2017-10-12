@@ -133,18 +133,25 @@ fi
 
 # mesos-slave configuration
 if [ $mesos = "slave_install" ] || [ $mesos = "slave_cluster_update" ] ; then
-	echo $sysip > /etc/mesos-slave/ip
-	echo $sysip > /etc/mesos-slave/hostname
-	echo 'docker,mesos' > /etc/mesos-slave/containerizers
-	echo '10mins' > /etc/mesos-slave/executor_registration_timeout
+#	echo $sysip > /etc/mesos-slave/ip
+#	echo $sysip > /etc/mesos-slave/hostname
+#	echo 'docker,mesos' > /etc/mesos-slave/containerizers
+#	echo '10mins' > /etc/mesos-slave/executor_registration_timeout
 	mv /tmp/zk /etc/mesos/zk
 
 # set up mesos-slave.service
 cat <<EOF_mesos > /etc/systemd/system/mesos-slave.service
 [Unit]
    Description=Mesos Slave Service
+
 [Service]
-   ExecStart=/usr/sbin/mesos-slave --master=$(cat /etc/mesos/zk) --work_dir=/var/lib/mesos
+ExecStart=/usr/sbin/mesos-slave \
+--master=$(cat /etc/mesos/zk) \
+--ip=$sysip --hostname=$sysip \
+--containerizers=docker,mesos \
+--executor_registration_timeout=10mins \
+--log_dir=/var/log/mesos --work_dir=/var/lib/mesos
+
 [Install]
    WantedBy=multi-user.target
 EOF_mesos
@@ -188,10 +195,14 @@ cat <<EOF_mesos > /etc/systemd/system/mesos-master.service
    Description=Mesos Master Service
    After=zookeeper.service
    Requires=zookeeper.service
+
 [Service]
-   ExecStart=/usr/sbin/mesos-master --zk=$(cat /etc/mesos/zk) \
-   	--ip=$sysip --hostname=$sysip --cluster=cluster01 \	
-	--quorum=$k --work_dir=/var/lib/mesos
+ExecStart=/usr/sbin/mesos-master \
+--zk=$(cat /etc/mesos/zk) \
+--ip=$sysip --hostname=$sysip \
+--cluster=cluster01 --quorum=$k \
+--work_dir=/var/lib/mesos --log_dir=/var/log/mesos
+
 [Install]
    WantedBy=multi-user.target
 EOF_mesos
