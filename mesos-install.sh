@@ -45,12 +45,12 @@ elif [ -z $size ] || [ $size -lt 0 ] || [ $size -gt 9 ] ; then
         echo $(tput sgr0) && exit
 fi
 
-if [ $mesos = "master" ] && [ $size -eq 0 ] ; then mesos=update_IP
-elif [ $mesos = "slave" ] && [ $size -eq 0 ] ; then mesos=update_IP
+if [ $mesos = "master" ] && [ $size -eq 0 ] ; then mesos=master_IP
+elif [ $mesos = "slave" ] && [ $size -eq 0 ] ; then mesos=slave_IP
 elif [ $mesos = "new" ] && [ $size -eq 0 ] ; then mesos=slave_install
 elif [ $mesos = "new" ] && [ $size -ge 1 ] && [ $size -le 9 ] ; then mesos=master_install
-elif [ $mesos = "slave" ] && [ $size -ge 1 ] && [ $size -le 9 ] ; then mesos=slave_install
-elif [ $mesos = "master" ] && [ $size -ge 1 ] && [ $size -le 9 ] ; then mesos=master_install
+elif [ $mesos = "slave" ] && [ $size -ge 1 ] && [ $size -le 9 ] ; then mesos=slave_update
+elif [ $mesos = "master" ] && [ $size -ge 1 ] && [ $size -le 9 ] ; then mesos=master_update
 fi
 
 # Get system IP information
@@ -59,8 +59,8 @@ syshost=$(hostname)
 sysip=$(ifconfig | grep $intf -A 1 | grep inet | awk '{print $2}' | awk -F: '{print $2}')
 sysnode=$(echo $sysip | awk -F. '{print $4}')
 
-### Mesos-slave package installation - mesos
-if [ $mesos = "update_IP" ] ; then
+### Update interface IP and mesos node IP configuration:
+if [ $mesos = "master_IP" ] || [ $mesos = "slave_IP" ] ; then
 
 	echo "Update interface IP and mesos node IP configuration."
 	read -p "Please enter new mesos node number: " new
@@ -77,10 +77,10 @@ if [ $mesos = "update_IP" ] ; then
 	new=$(echo $new | sed 's/^0*//')
 	newip=$(echo $sysip | cut -d. -f4 --complement).$new
 
-	read -p "Change hostname? [enter] for no change: " newhost
-	if [ -z $newhost ]
-   		then newhost=$(echo $syshost | cut -d- -f1)-$new
-		else newhost=$newhost-$new ; fi
+	read -p "Change hostname prefix? [enter] for no change: " newhost
+	if [ -z $newhost ] ; then 
+		newhost=$(echo $syshost | cut -d- -f1)-$new
+	else 	newhost=$newhost-$new ; fi
 
 	echo $(tput setaf 6)
 	echo "!! Update host name from $syshost to $newhost !!"
@@ -92,21 +92,18 @@ if [ $mesos = "update_IP" ] ; then
 	sed -i "s/$sysip/$newip/" /etc/network/interfaces
 	sed -i -e "/$syshost/i $newip\t$newhost" -e "/$syshost/d" /etc/hosts
 
-	if [ $size -eq 0 ] ; then
+	if [ $mesos = "slave_IP" ] ; then
 		echo $newip > /etc/mesos-slave/ip
 		sed -i "s/=$sysip/=$newip/g" /etc/systemd/system/mesos-slave.service
-	else
+	elif [ $mesos = "master_IP" ] ; then
 		echo $newip > /etc/mesos-master/ip
-		echo $newip > /etc/mesos-master/hostname
 		echo $new > /etc/zookeeper/conf/myid
 		sed -i "s/=$sysip/=$newip/g" /etc/systemd/system/mesos-master.service
 	fi
-
 fi
 
-
 ### Mesos-slave package installation - mesos
-if [ $mesos = "slave_install" ] ; then
+if [ $mesos = "slave_install" ] || [ $mesos = "slave_update" ] ; then
 
 echo $(tput setaf 6)
 if [ -e /etc/apt/sources.list.d/mesosphere.list ] ; then
@@ -175,7 +172,7 @@ EOF
 fi
 
 ### Mesos-master package installation - zookeeper, mesos, marathon, chronos
-if [ $mesos = "master_install" ] ; then
+if [ $mesos = "master_install" ] || [ $mesos = "master_update" ]; then
 apt-get -y update
 
 ### zookeeper installation
@@ -244,7 +241,7 @@ EOF
 	cmd=$(echo -n "$cmd --work_dir=/var/lib/mesos")
 	cmd=$(echo -n "$cmd --log_dir=/var/log/mesos")
 
-	# configure chronos service and restart
+	# configure mesos-master.service system startup
  	sed "s|_InsertCmdHere_|$cmd|" /tmp/template > etc/systemd/system/mesos-master.service
 	systemctl daemon-reload
 	systemctl start mesos-master.service
@@ -283,8 +280,8 @@ EOF
 	cmd=$(echo -n "$cmd --work_dir=/var/lib/mesos")
 	cmd=$(echo -n "$cmd --log_dir=/var/log/mesos")
 
-	# configure chronos service and restart
- 	sed "s|_InsertCmdHere_|$cmd|" /tmp/template > /etc/systemd/system/marathon.service
+	# configure marathon.service system startup
+	sed "s|_InsertCmdHere_|$cmd|" /tmp/template > /etc/systemd/system/marathon.service
    	systemctl daemon-reload
    	systemctl start marathon.service
    	systemctl enable marathon.service
@@ -308,12 +305,11 @@ EOF
 	echo "!! Installing chronos !!$(tput sgr0)"
 	apt-get -y install chronos
 
-	# configure chronos service and restart
+	# configure chronos.service system startup
 	mv /tmp/chronos.service /etc/systemd/system/
 	systemctl daemon-reload
 	systemctl start chronos.service
 	systemctl enable chronos.service
-
 fi
 
 # ------------
