@@ -18,15 +18,15 @@ elif [ ! -e /etc/apt/sources.list.d/mesosphere.list ] ; then mesos=new
 		| sudo tee /etc/apt/sources.list.d/mesosphere.list
 
 else	echo $(tput setaf 1)
-	echo "!! Error -- mesosphere.list exits but cannot find"
-	echo "neither mesos-master.service nor mesos-slave.service"
+	echo "Exit & Error -- mesosphere.list exits but cannot find"
+	echo "neither mesos-master.service nor mesos-slave.service."
 	echo $(tput sgr0) && exit
 fi
 
 echo $(tput setaf 6)
 if [ $mesos = "new" ] ; then
 	echo "!! This is a new node, which does not have mesos installed !!"
-	echo "Enter [0] to install mesos-slave; or [1-9] to install mesos-master;"
+	echo "Enter [0] to install mesos-slave; or [1-9] to install mesos-master."
 elif [ $mesos = "slave" ] ; then 
 	echo "!! This node already has mesos-$mesos installed !!"
 	echo "Enter [0] to update cluster configuration in mesos-$mesos."
@@ -60,7 +60,7 @@ syshost=$(hostname)
 sysip=$(ifconfig | grep $intf -A 1 | grep inet | awk '{print $2}' | awk -F: '{print $2}')
 sysnode=$(echo $sysip | awk -F. '{print $4}')
 
-### Mesos-slave package installation - mesos
+### Mesos-slave package installation
 if [ $size -eq 0 ] ; then
 echo $(tput setaf 6)
 echo "Installing mesos-slave package ............. "
@@ -86,12 +86,13 @@ echo $(tput sgr0)
 		echo $(tput sgr0)
 		apt-get -y update	
 		apt-get -y install mesos
+		
 		# remove zookeeper because slave does not need it
 		systemctl stop zookeeper
 		systemctl disable zookeeper
 		apt-get -y remove --purge zookeeper	
 	else
-		echo "Mesos-slave package has been installed in this node $sysip."
+		echo "Mesos-slave has already been installed in this node $sysip."
 		echo $(tput sgr0)
 	fi
 
@@ -131,7 +132,7 @@ fi
 ### Mesos-master package installation - zookeeper, mesos, marathon, chronos
 if [ $size -ne 0 ] ; then apt-get -y update
 echo $(tput setaf 6)
-echo "Installing mesos-master package - zookeeper, mesos, marathon, chronos"
+echo "Installing mesos-master package - zookeeper, mesos, marathon and chronos"
 echo $(tput sgr0)
 
 ### zookeeper installation
@@ -211,9 +212,7 @@ EOF
 	echo "!! Installing marathon package !!$(tput sgr0)"
    	apt-get -y install marathon
 
-
-	# marathon configuration in master node
-	# set up marathon info data
+	# marathon configuration
    	mkdir -p /etc/marathon/conf
 	echo $sysip > /etc/marathon/conf/hostname
 	cp /etc/mesos/zk /etc/marathon/conf/master
