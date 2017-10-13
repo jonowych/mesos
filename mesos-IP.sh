@@ -65,5 +65,5 @@ elif [ $mesos = "master_IP" ] ; then
 fi
 
 echo $(tput setaf 6)
-echo "!! Update host name from $syshost to $newhost !!"
+echo "!! System is restarting ........ "
 echo $(tput sgr0) && shutdown -r now
