@@ -4,10 +4,19 @@ if [ ! "${USER}" = "root" ] ; then
    echo "!! Please enter command as root $(tput setaf 1)sudo $0 $(tput sgr0)!!"
    echo && exit ; fi
 
-if [ ! -e /etc/apt/sources.list.d/mesosphere.list ] ; then mesos=new
+if [ -e /etc/systemd/system/mesos-master.service ] ; then mesos=master
 elif [ -e /etc/systemd/system/mesos-slave.service ] ; then mesos=slave
-elif [ -e /etc/systemd/system/mesos-master.service ] ; then mesos=master
-	zoonode=$(cat /etc/zookeeper/conf/myid)
+elif [ ! -e /etc/apt/sources.list.d/mesosphere.list ] ; then mesos=new
+	# Set up mesosphere repository for new node
+	# Add GPG key for the official mesosphere repository and update
+	apt-key adv --keyserver keyserver.ubuntu.com --recv E56151BF
+	# Add mesosphere repository to APT sources
+	DISTRO=$(lsb_release -is | tr '[:upper:]' '[:lower:]')
+	# Add repository according linux distro
+	CODENAME=$(lsb_release -cs)
+	echo "deb http://repos.mesosphere.com/${DISTRO} ${CODENAME} main" \
+		| sudo tee /etc/apt/sources.list.d/mesosphere.list
+
 else	echo $(tput setaf 1)
 	echo "!! Error -- mesosphere.list exits but cannot find"
 	echo "neither mesos-master.service nor mesos-slave.service"
@@ -16,11 +25,11 @@ fi
 
 echo $(tput setaf 6)
 if [ $mesos = "new" ] ; then
-	echo "!! This node is new, which does not have mesos installed !!"
+	echo "!! This is a new node, which does not have mesos installed !!"
 	echo "Enter [0] to install mesos-slave; or [1-9] to install mesos-master;"
 else 	echo "!! This node already has mesos-$mesos installed !!"
 	echo "Enter [1-9] to update cluster configuration;"
-	echo "or enter [0] to only update mesos-master IP."
+	echo "or enter [0] to only update mesos-$mesos IP."
 fi
 echo $(tput sgr0)
 
@@ -34,15 +43,14 @@ elif [ -z $size ] || [ $size -lt 0 ] || [ $size -gt 9 ] ; then
 	echo $(tput setaf 1)
         echo "!! Exit -- Please enter cluster size between 0 and 9 !!"
         echo $(tput sgr0) && exit
-elif [ $mesos = "master" ] && [ $size -eq 0 ] ; then mesos=master_IP_update
-elif [ $mesos = "slave" ] && [ $size -eq 0 ] ; then
-	echo $(tput setaf 1)
-	echo "This node is not updated because it has mesos-slave installed"
-	echo $(tput sgr0) && exit
+fi
+
+if [ $mesos = "master" ] && [ $size -eq 0 ] ; then mesos=update_IP
+elif [ $mesos = "slave" ] && [ $size -eq 0 ] ; then mesos=update_IP
 elif [ $mesos = "new" ] && [ $size -eq 0 ] ; then mesos=slave_install
-elif [ $mesos = "master" ] && [ $size -ge 1 ] && [ $size -le 9 ] ; then mesos=master_cluster_update
-elif [ $mesos = "slave" ] && [ $size -ge 1 ] && [ $size -le 9 ] ; then mesos=slave_cluster_update
 elif [ $mesos = "new" ] && [ $size -ge 1 ] && [ $size -le 9 ] ; then mesos=master_install
+elif [ $mesos = "slave" ] && [ $size -ge 1 ] && [ $size -le 9 ] ; then mesos=slave_install
+elif [ $mesos = "master" ] && [ $size -ge 1 ] && [ $size -le 9 ] ; then mesos=master_install
 fi
 
 # Get system IP information
@@ -50,19 +58,80 @@ intf=$(ifconfig | grep -m1 ^e | awk '{print $1}')
 syshost=$(hostname)
 sysip=$(ifconfig | grep $intf -A 1 | grep inet | awk '{print $2}' | awk -F: '{print $2}')
 sysnode=$(echo $sysip | awk -F. '{print $4}')
-sed -i -e "/$syshost/i $sysip\t$syshost" -e "/$syshost/d" /etc/hosts
+
+### Mesos-slave package installation - mesos
+if [ $mesos = "update_IP" ] ; then
+
+	echo "Update interface IP and mesos node IP configuration."
+	read -p "Please enter new mesos node number: " new
+	if ! [ $new -eq $new ] 2>/dev/null ; then
+        	echo $(tput setaf 1)
+		echo "!! Exit -- Sorry, integer only !!"
+	       	echo $(tput sgr0) && exit ; fi
+
+	if [ -z $new ] || [ $new -lt 1 ] || [ $new -gt 254 ] ; then
+        	echo $(tput setaf 1)
+		echo "!! Exit -- node number out of range !!"
+		echo $(tput sgr0) && exit ; fi
+
+	new=$(echo $new | sed 's/^0*//')
+	newip=$(echo $sysip | cut -d. -f4 --complement).$new
+
+	read -p "Change hostname? [enter] for no change: " newhost
+	if [ -z $newhost ]
+   		then newhost=$(echo $syshost | cut -d- -f1)-$new
+		else newhost=$newhost-$new ; fi
+
+	echo $(tput setaf 6)
+	echo "!! Update host name from $syshost to $newhost !!"
+	echo "!! Update interface IP from $sysip to $newip !!"
+	echo $(tput sgr0)"Pres ctrl-C within 10 seconds if not want to proceed."
+	sleep 10
+
+	echo $newhost > /etc/hostname
+	sed -i "s/$sysip/$newip/" /etc/network/interfaces
+	sed -i -e "/$syshost/i $newip\t$newhost" -e "/$syshost/d" /etc/hosts
+
+	if [ $size -eq 0 ] ; then
+		echo $newip > /etc/mesos-slave/ip
+		sed -i "s/=$sysip/=$newip/g" /etc/systemd/system/mesos-slave.service
+	else
+		echo $newip > /etc/mesos-master/ip
+		echo $newip > /etc/mesos-master/hostname
+		echo $new > /etc/zookeeper/conf/myid
+		sed -i "s/=$sysip/=$newip/g" /etc/systemd/system/mesos-master.service
+	fi
+
+fi
+
+
+### Mesos-slave package installation - mesos
+if [ $mesos = "slave_install" ] ; then
 
 echo $(tput setaf 6)
-echo "Will install mesos-$(echo $mesos | awk -F_ '{print $1}') in this node $sysip"
-echo "If already installed, mesos configuration will be updated."
+if [ -e /etc/apt/sources.list.d/mesosphere.list ] ; then
+	echo "Mesos-slave package has been installed in this node $sysip." 
+	echo "Update cluster configuration from mesos-master node........"
+else
+	echo "Mesos-slave package will be installed in this node $sysip"
+fi
 echo $(tput sgr0)
 
-# Prepare zk cluster configuration for slave
-if [ $mesos = "slave_install" ] || [ $mesos = "slave_cluster_update" ] ; then
-	# Get mesosphere cluster configuration from master node
+# create mesos-slave.service template
+cat <<EOF > /tmp/template
+[Unit]
 
-	echo "Contact Master node to retrieve cluster configuration;"
-	read -p "Enter mesosphere master node number (single number): " k
+   Description=Mesos Slave Service
+
+[Service]
+   _InsertCmdHere_
+
+[Install]
+   WantedBy=multi-user.target
+EOF
+
+	# Get mesosphere cluster configuration from master node
+	read -p "Enter mesos-master node number (single number): " k
 	masterip=$(echo $sysip | cut -d. -f4 --complement).$k
 
 	ping -q -c3 $masterip > /dev/null
@@ -73,33 +142,48 @@ if [ $mesos = "slave_install" ] || [ $mesos = "slave_cluster_update" ] ; then
 			echo "!! Master node $masterip is not available !!"
 			echo $(tput sgr0) && exit
 		fi
-else
-	echo "Press Ctl-C within 10 seconds to exit script."
-	sleep 10
+
+	echo $(tput setaf 3)
+	echo "!! Installing mesos package !!$(tput sgr0)"
+	apt-get -y update	
+	apt-get -y install mesos
+
+	# remove zookeeper because slave does not need it
+	systemctl stop zookeeper
+	systemctl disable zookeeper
+	apt-get -y remove --purge zookeeper
+
+	# mesos-slave configuration
+	echo $sysip > /etc/mesos-slave/ip
+	mv /tmp/zk /etc/mesos/zk
+	
+	# Prepare mesos-slave startup command
+	cmd=$(echo -n "ExecStart=/usr/sbin/mesos-slave")
+	cmd=$(echo -n "$cmd --ip=$sysip")
+	cmd=$(echo -n "$cmd --hostname=$sysip")
+	cmd=$(echo -n "$cmd --master=$(cat /etc/mesos/zk)")
+	cmd=$(echo -n "$cmd --containerizers=docker,mesos")
+	cmd=$(echo -n "$cmd --executor_registration_timeout=10mins")
+	cmd=$(echo -n "$cmd --work_dir=/var/lib/mesos")
+	cmd=$(echo -n "$cmd --log_dir=/var/log/mesos")
+
+	# configure mesos-slave service and restart
+ 	sed "s|_InsertCmdHere_|$cmd|" /tmp/template > etc/systemd/system/mesos-slave.service
+	systemctl daemon-reload
+	systemctl start mesos-slave.service
+	systemctl enable mesos-slave
 fi
 
-# Set up mesosphere repository for new node
-if [ ! -e /etc/apt/sources.list.d/mesosphere.list ] ; then
-	# Add GPG key for the official mesosphere repository and update
-	apt-key adv --keyserver keyserver.ubuntu.com --recv E56151BF
-	# Add mesosphere repository to APT sources
-	DISTRO=$(lsb_release -is | tr '[:upper:]' '[:lower:]')
-	# Add repository according linux distro
-	CODENAME=$(lsb_release -cs)
-	echo "deb http://repos.mesosphere.com/${DISTRO} ${CODENAME} main" \
-		| sudo tee /etc/apt/sources.list.d/mesosphere.list
-	apt-get -y update
-fi
-
-# Start packages installation - zookeeper, mesos, marathon, chronos
-### zookeeper installation
+### Mesos-master package installation - zookeeper, mesos, marathon, chronos
 if [ $mesos = "master_install" ] ; then
-echo $(tput setaf 3)"!! Installing zookeeper package !!"$(tput sgr0)
-	apt-get -y install zookeeperd
-fi
+apt-get -y update
 
-# zookeeper configuration
-if [ $mesos = "master_cluster_update" ] || [ $mesos = "master_install" ] ; then
+### zookeeper installation
+	echo $(tput setaf 3)
+	echo "!! Installing zookeeper package !!"$(tput sgr0)
+	apt-get -y install zookeeperd
+
+	# zookeeper configuration
 	echo $sysnode > /etc/zookeeper/conf/myid
 
 	# prepare zookeeper.txt and import it to /etc/zookeeper/conf/zoo.cfg.
@@ -116,65 +200,28 @@ if [ $mesos = "master_cluster_update" ] || [ $mesos = "master_install" ] ; then
 	# Start zookeeper service after configuration
 	service zookeeper restart
 	sleep 3
-fi
 
 ### mesos installation
-if [ $mesos = "slave_install" ] || [ $mesos = "master_install" ] ; then
-echo && echo "$(tput setaf 3)!! Installing mesos package !!$(tput sgr0)"
-	apt-get -y install mesos
-
-	if [ $mesos = "slave_install" ] ; then
-		# remove zookeeper because slave does not need it
-		systemctl stop zookeeper
-		systemctl disable zookeeper
-		apt-get -y remove --purge zookeeper
-	fi
-fi
-
-# mesos-slave configuration
-if [ $mesos = "slave_install" ] || [ $mesos = "slave_cluster_update" ] ; then
-#	echo $sysip > /etc/mesos-slave/ip
-#	echo $sysip > /etc/mesos-slave/hostname
-#	echo 'docker,mesos' > /etc/mesos-slave/containerizers
-#	echo '10mins' > /etc/mesos-slave/executor_registration_timeout
-	mv /tmp/zk /etc/mesos/zk
-
-# set up mesos-slave.service
-cat <<EOF_mesos > /etc/systemd/system/mesos-slave.service
+# create mesos-master.service template
+cat <<EOF > /tmp/template
 [Unit]
-   Description=Mesos Slave Service
+   Description=Mesos Master Service
+   After=zookeeper.service
+   Requires=zookeeper.service
 
 [Service]
-ExecStart=/usr/sbin/mesos-slave \
---master=$(cat /etc/mesos/zk) \
---ip=$sysip --hostname=$sysip \
---containerizers=docker,mesos \
---executor_registration_timeout=10mins \
---log_dir=/var/log/mesos --work_dir=/var/lib/mesos
+   _InsertCmdHere_
 
 [Install]
    WantedBy=multi-user.target
-EOF_mesos
+EOF
 
-	# Start mesos-slave service after configuration set up
-	systemctl daemon-reload
-	systemctl start mesos-slave.service
-	systemctl enable mesos-slave
+	echo $(tput setaf 3)
+	echo "!! Installing mesos package !!$(tput sgr0)"
+	apt-get -y install mesos
 
-# mesos-master configuration
-elif [ $mesos = "master_IP_update" ] ; then
+	# mesos-master configuration
 	echo $sysip > /etc/mesos-master/ip
-	echo $sysip > /etc/mesos-master/hostname
-	echo $sysnode > /etc/zookeeper/conf/myid
-	
-	# Update mesos-master.service
-	zooip=$(echo $sysip | cut -d. -f4 --complement).$zoonode
-	sed -i "s/=$zooip/=$sysip/g" /etc/systemd/system/mesos-master.service
-
-elif [ $mesos = "master_install" ] || [ $mesos = "master_cluster_update" ] ; then
-	echo cluster01 > /etc/mesos-master/cluster
-	echo $sysip > /etc/mesos-master/ip
-	echo $sysip > /etc/mesos-master/hostname
 	
 	# Configure /etc/mesos/zk
 	echo -n "zk://"  > /etc/mesos/zk
@@ -187,87 +234,86 @@ elif [ $mesos = "master_install" ] || [ $mesos = "master_cluster_update" ] ; the
 
 	# set up quorum (>50% of master members in cluster)
 	let "k = size/2 + 1"
-	echo $k > /etc/mesos-master/quorum
 
-# set up mesos-master.service
-cat <<EOF_mesos > /etc/systemd/system/mesos-master.service
-[Unit]
-   Description=Mesos Master Service
-   After=zookeeper.service
-   Requires=zookeeper.service
+	cmd=$(echo -n "ExecStart=/usr/sbin/mesos-master")
+	cmd=$(echo -n "$cmd --ip=$sysip")
+	cmd=$(echo -n "$cmd --hostname=$sysip")
+	cmd=$(echo -n "$cmd --zk=$(cat /etc/mesos/zk)")
+	cmd=$(echo -n "$cmd --cluster=cluster01")
+	cmd=$(echo -n "$cmd --quorum=$k")
+	cmd=$(echo -n "$cmd --work_dir=/var/lib/mesos")
+	cmd=$(echo -n "$cmd --log_dir=/var/log/mesos")
 
-[Service]
-ExecStart=/usr/sbin/mesos-master \
---zk=$(cat /etc/mesos/zk) \
---ip=$sysip --hostname=$sysip \
---cluster=cluster01 --quorum=$k \
---work_dir=/var/lib/mesos --log_dir=/var/log/mesos
-
-[Install]
-   WantedBy=multi-user.target
-EOF_mesos
-
-	# Start mesos-master service after configuration set up
+	# configure chronos service and restart
+ 	sed "s|_InsertCmdHere_|$cmd|" /tmp/template > etc/systemd/system/mesos-master.service
 	systemctl daemon-reload
 	systemctl start mesos-master.service
 	systemctl enable mesos-master
-fi
 
-### marathon installation in master node
-if [ $mesos = "master_install" ] ; then
-	echo "$(tput setaf 3)!! Installing marathon package !!$(tput sgr0)"
-   	apt-get -y install marathon
-fi
-
-# marathon configuration in master node
-if [ $mesos = "master_cluster_update" ] || [ $mesos = "master_install" ] ; then
-	# set up marathon info data
-   	mkdir -p /etc/marathon/conf
-	cp /etc/mesos-master/hostname /etc/marathon/conf/hostname
-	cp /etc/mesos/zk /etc/marathon/conf/master
-	sed 's/mesos/marathon/' /etc/mesos/zk > /etc/marathon/conf/zk
-
-# set up marathon startup service
-cat <<EOF_marathon > /etc/systemd/system/marathon.service
+### marathon installation
+# create marathon.service template
+cat <<EOF > /tmp/template
 [Unit]
    Description=Marathon Service
    After=mesos-master.service
    Requires=mesos-master.service
+
 [Service]
-   ExecStart=/usr/bin/marathon --master $(cat /etc/mesos/zk) --zk $(cat /etc/mesos/zk | sed 's/mesos/marathon/')
+   _InsertCmdHere_   
+
 [Install]
    WantedBy=multi-user.target
-EOF_marathon
+EOF
 
-	# Start marathod service after configuration set up
+	echo $(tput setaf 3)
+	echo "!! Installing marathon package !!$(tput sgr0)"
+   	apt-get -y install marathon
+
+	# marathon configuration in master node
+	# set up marathon info data
+   	mkdir -p /etc/marathon/conf
+	echo $sysip > /etc/marathon/conf/hostname
+	cp /etc/mesos/zk /etc/marathon/conf/master
+	sed 's/mesos/marathon/' /etc/mesos/zk > /etc/marathon/conf/zk
+
+	cmd=$(echo -n "ExecStart=/usr/bin/marathon")
+	cmd=$(echo -n "$cmd --hostname=$sysip")
+	cmd=$(echo -n "$cmd --master $(cat /etc/mesos/zk)")
+	cmd=$(echo -n "$cmd --zk $(cat /etc/mesos/zk | sed 's/mesos/marathon/')")
+	cmd=$(echo -n "$cmd --work_dir=/var/lib/mesos")
+	cmd=$(echo -n "$cmd --log_dir=/var/log/mesos")
+
+	# configure chronos service and restart
+ 	sed "s|_InsertCmdHere_|$cmd|" /tmp/template > /etc/systemd/system/marathon.service
    	systemctl daemon-reload
    	systemctl start marathon.service
    	systemctl enable marathon.service
-fi
 
-### chronos installation in master node
-if [ $mesos = "master_install" ] ; then
-echo "$(tput setaf 3)!! Installing chronos !!$(tput sgr0)"
-	apt-get -y install chronos
-fi
-
-# chronos configuration in master node
-if [ $mesos = "master_install" ] ; then
-cat <<EOF_chronos > /etc/systemd/system/chronos.service
+### chronos installation
+# create marathon.service template
+cat <<EOF > /tmp/template
 [Unit]
    Description=Chronos Service
    After=marathon.service
    Requires=marathon.service
+
 [Service]
    ExecStart=/usr/bin/chronos
+
 [Install]
    WantedBy=multi-user.target
-EOF_chronos
+EOF
 
-	# Start chronos service after configuration set up
+	echo $(tput setaf 3)
+	echo "!! Installing chronos !!$(tput sgr0)"
+	apt-get -y install chronos
+
+	# configure chronos service and restart
+	mv /tmp/chronos.service /etc/systemd/system/
 	systemctl daemon-reload
 	systemctl start chronos.service
 	systemctl enable chronos.service
+
 fi
 
 # ------------
