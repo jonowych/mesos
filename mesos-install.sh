@@ -24,19 +24,18 @@ else	echo $(tput setaf 1)
 fi
 
 echo $(tput setaf 6)
-if [ $mesos = "new" ] ; then
-	echo "!! This is a new node, which does not have mesos installed !!"
-	echo "Enter [0] to install mesos-slave; or [1-9] to install mesos-master."
-elif [ $mesos = "slave" ] ; then 
-	echo "!! This node already has mesos-$mesos installed !!"
-	echo "Enter [0] to update cluster configuration in mesos-$mesos."
+if [ ! -z $1 ] ; then size=$1
+elif [ $mesos = "slave" ] ; then size=0
 elif [ $mesos = "master" ] ; then
 	echo "!! This node already has mesos-$mesos installed !!"
 	echo "Enter [1-9] to update cluster configuration in mesos-$mesos."
+	read -p "How many master nodes in mesosphere cluster? " size
+elif [ $mesos = "new" ] ; then
+	echo "!! This is a new node, which does not have mesos installed !!"
+	echo "Enter [0] to install mesos-slave; or [1-9] to install mesos-master."
+	read -p "How many master nodes in mesosphere cluster? " size
 fi
 echo $(tput sgr0)
-
-read -p "How many master nodes in mesosphere cluster? " size
 
 echo $(tput setaf 1)
 if ! [ $size -eq $size ] 2>/dev/null ; then
@@ -92,7 +91,7 @@ echo $(tput sgr0)
 		systemctl disable zookeeper
 		apt-get -y remove --purge zookeeper	
 	else
-		echo "Mesos-slave has already been installed in this node $sysip."
+		echo "Mesos-$mesos has already been installed in this node $sysip."
 		echo $(tput sgr0)
 	fi
 
